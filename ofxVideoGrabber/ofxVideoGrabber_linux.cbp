@@ -199,9 +199,6 @@
 		<Unit filename="src/Libdc1394Grabber/Libdc1394GrabberFeatureHelper.h">
 			<Option virtualFolder="src/Libdc1394Grabber/" />
 		</Unit>
-		<Unit filename="src/Libdc1394Grabber/Libdc1394GrabberFeatures.cpp">
-			<Option virtualFolder="src/Libdc1394Grabber/" />
-		</Unit>
 		<Unit filename="src/Libdc1394Grabber/Libdc1394GrabberFramerateHelper.cpp">
 			<Option virtualFolder="src/Libdc1394Grabber/" />
 		</Unit>
