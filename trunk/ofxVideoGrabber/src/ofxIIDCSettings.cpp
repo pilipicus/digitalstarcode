@@ -90,9 +90,13 @@ void ofxIIDCSettings::setupGUI()
                 transform(nameCaps.begin(), nameCaps.end(), nameCaps.begin(), ::toupper);
 
                 int defaultval = FEATURE_MODE_MANUAL;
+				
                 if(videoGrabber->featureVals[i].hasAutoModeActive) {
                     defaultval = FEATURE_MODE_AUTO;
-                }
+					videoGrabber->setFeatureMode(FEATURE_MODE_AUTO, feature );
+                } else {
+					videoGrabber->setFeatureMode(FEATURE_MODE_MANUAL, feature );
+				}
                 vector <string> modelist;
                 modelist.push_back("MANUAL");
 
@@ -120,7 +124,10 @@ void ofxIIDCSettings::setupGUI()
                 int defaultval = FEATURE_MODE_MANUAL;
                 if(videoGrabber->featureVals[tmp_index].hasAutoModeActive) {
                     defaultval = FEATURE_MODE_AUTO;
-                }
+					videoGrabber->setFeatureMode(FEATURE_MODE_AUTO, feature );
+                } else {
+					videoGrabber->setFeatureMode(FEATURE_MODE_MANUAL, feature );
+				}
                 vector <string> modelist;
                 modelist.push_back("MANUAL");
 
