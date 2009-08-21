@@ -741,7 +741,6 @@ void Libdc1394Grabber::setFeatureValue( float _val, int _feature )
 	if( err != DC1394_SUCCESS )
 	{
 		cout << "*******************" << endl;
-		//cout << dc1394_error_strings[err] << endl;
 		cout << "Libdc1394Grabber::setFeatureVal, failed to set feature: " << cameraFeatureToTitle( _feature ) << endl;
 		cout << "*******************" << endl;
 	}
@@ -762,22 +761,45 @@ void Libdc1394Grabber::setFeatureMode(int _featureMode, int _feature )
 {
     dc1394error_t err = DC1394_FAILURE;
     dc1394feature_t tmpFeature = Libdc1394GrabberFeatureHelper::AVidFeatureToLibdcFeature( _feature );
+    int index = -1;
+
+	for( int i = 0; i < availableFeatureAmount; i++ )
+	{
+		if(featureVals[i].feature == _feature)
+		{
+                index = i;
+		}
+	}
 
 	if (_featureMode == FEATURE_MODE_MANUAL)
 	{
-	    setFeatureOnOff(true,_feature);
-	    err = dc1394_feature_set_mode( camera, tmpFeature, DC1394_FEATURE_MODE_MANUAL );
-	    if(err == DC1394_SUCCESS) {
-            err = dc1394_feature_set_absolute_control( camera, tmpFeature, DC1394_OFF );
+	    if(featureVals[index].isOnOffSwitchable) {
+            setFeatureOnOff(true,_feature);
 	    }
+	    err = dc1394_feature_set_mode( camera, tmpFeature, DC1394_FEATURE_MODE_MANUAL );
+//	    if(err == DC1394_SUCCESS) {
+//            err = dc1394_feature_set_absolute_control( camera, tmpFeature, DC1394_OFF );
+//	    }
 	}
 	else if(_featureMode == FEATURE_MODE_AUTO)
 	{
+	    if(featureVals[index].isOnOffSwitchable) {
+            setFeatureOnOff(true,_feature);
+	    }
 	    err = dc1394_feature_set_mode( camera, tmpFeature, DC1394_FEATURE_MODE_AUTO );
+//	    if(err == DC1394_SUCCESS) {
+//            err = dc1394_feature_set_absolute_control( camera, tmpFeature, DC1394_OFF );
+//	    }
 	}
 	else if(_featureMode == FEATURE_MODE_ONE_PUSH_AUTO)
 	{
+	    if(featureVals[index].isOnOffSwitchable) {
+            setFeatureOnOff(true,_feature);
+	    }
 	    err = dc1394_feature_set_mode( camera, tmpFeature, DC1394_FEATURE_MODE_ONE_PUSH_AUTO );
+//	    if(err == DC1394_SUCCESS) {
+//            err = dc1394_feature_set_absolute_control( camera, tmpFeature, DC1394_OFF );
+//	    }
 	}
 
     if( err != DC1394_SUCCESS )
@@ -791,9 +813,8 @@ void Libdc1394Grabber::setFeatureMode(int _featureMode, int _feature )
 bool Libdc1394Grabber::setFeatureOnOff( bool _val, int _feature )
 {
 	dc1394error_t err = DC1394_FAILURE;
-
 	dc1394feature_t tmpFeature = Libdc1394GrabberFeatureHelper::AVidFeatureToLibdcFeature( _feature );
-    cout << " Libdc1394Grabber::setFeatureOnOff " << _val << ", " << _feature  << endl;
+
     if( _val ) {
         err = dc1394_feature_set_power( camera, tmpFeature, DC1394_ON );
     }
@@ -805,7 +826,6 @@ bool Libdc1394Grabber::setFeatureOnOff( bool _val, int _feature )
 	if( err != DC1394_SUCCESS )
 	{
 		cout << "*******************" << endl;
-		//cout << dc1394_error_strings[err] << endl;
 		cout << "Libdc1394Grabber::setFeatureStateOnOff, failed to set feature: " << cameraFeatureToTitle( _feature ) << endl;
 		cout << "*******************" << endl;
 	}

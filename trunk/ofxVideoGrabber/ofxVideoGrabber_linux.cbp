@@ -70,7 +70,7 @@
 			<Add directory="../../../addons/ofxControlPanel" />
 			<Add directory="../../../addons/ofxXmlSettings/src" />
 			<Add directory="../../../addons/ofxXmlSettings/libs" />
-			<Add directory="libs/include" />
+			<Add directory="libs/linux/include" />
 		</Compiler>
 		<Linker>
 			<Add library="fmodex" />
@@ -91,7 +91,7 @@
 			<Add directory="../../../libs/fmodex/lib" />
 			<Add directory="../../../libs/unicap/lib" />
 			<Add directory="../../../libs/poco/lib" />
-			<Add directory="libs/lib" />
+			<Add directory="libs/linux/lib" />
 		</Linker>
 		<ExtraCommands>
 			<Add after="#      copy libs and shell script to bin directory:" />
