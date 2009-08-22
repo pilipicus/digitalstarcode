@@ -1,0 +1,10 @@
+#summary #Information about development updates.
+
+= ofxVideoGrabber core (with Libdc1394) =
+
+== Version 0.1 ==
+* First available download. No saving or loading of settings yet
+
+== Version 0.11 ==
+* Fixed crash bug when not using texture.
+* Fixed FPS conversion error on OSX
