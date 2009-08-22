@@ -13,7 +13,6 @@ ofxVideoGrabber::ofxVideoGrabber()
 
 //--------------------------------------------------------------------
 ofxVideoGrabber::~ofxVideoGrabber(){
-
 	close();
 
 }

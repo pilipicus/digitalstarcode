@@ -8,6 +8,8 @@ class ofxVideoGrabberSDK
 	public:
 
         ofxVideoGrabberSDK() {bHasNewFrame = false;};
+		virtual ~ofxVideoGrabberSDK() {cout << "ofxVideoGrabberSDK destructor" << endl;};
+		
 		virtual bool init( int _width = 320, int _height = 240, int _format = VID_FORMAT_RGB, int _targetFormat = VID_FORMAT_RGB , int _frameRate = 15 ) = 0;
 		virtual void close() = 0;
 		virtual unsigned char* getPixels() = 0;

@@ -114,6 +114,7 @@ class guiTypeButtonSlider : public guiBaseObject{
             }else{
                 slider->setTypeFloat();
             }
+			slider->setFont(displayText.ourFont);
 
             /* left button setup */
             leftButton = new guiTypeMinusButton();

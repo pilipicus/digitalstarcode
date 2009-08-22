@@ -9,6 +9,8 @@ dc1394_t* Libdc1394Grabber::d = NULL;
 
 Libdc1394Grabber::Libdc1394Grabber()
 {
+	cout << "Libdc1394Grabber() constructor" << endl;
+
 	conversionNeeded = false;
 	grabbedFirstImage = false;
 
@@ -26,7 +28,9 @@ Libdc1394Grabber::Libdc1394Grabber()
 
 Libdc1394Grabber::~Libdc1394Grabber()
 {
-
+	
+	cout << "Libdc1394Grabber() destructor" << endl;
+	fprintf(stderr,"Libdc1394Grabber() destructor\n");
 	if (camera != NULL )
 	{
 		fprintf(stderr,"stop transmission\n");
@@ -47,12 +51,6 @@ void Libdc1394Grabber::close()
 
 	if (camera != NULL )
 	{
-		fprintf(stderr,"stop transmission\n");
-		// Stop data transmission
-		if (dc1394_video_set_transmission(camera,DC1394_OFF)!=DC1394_SUCCESS)
-		{
-			printf("couldn't stop the camera?\n");
-		}
 		// Close camera
 		cleanupCamera();
 	}
@@ -306,7 +304,6 @@ void Libdc1394Grabber::threadedFunction()
 		captureFrame();
 		ofSleepMillis(2);
 	}
-
 	return;
 }
 
@@ -330,7 +327,7 @@ bool Libdc1394Grabber::grabFrame(unsigned char ** _pixels)
 void Libdc1394Grabber::captureFrame()
 {
 
-	if( !bHasNewFrame && (camera != NULL ) )
+	if( !bHasNewFrame && (camera != NULL ))
 	{
 		/*-----------------------------------------------------------------------
 		*  capture one frame
@@ -465,18 +462,33 @@ void Libdc1394Grabber::setBayerPatternIfNeeded()
 
 void Libdc1394Grabber::cleanupCamera()
 {
-  dc1394_capture_stop(camera);
-  dc1394_video_set_transmission(camera, DC1394_OFF);
+	stopThread();
+	while(isThreadRunning()) 1;
+	//this sleep seems necessary, at least on OSX, to avoid an occasional hang on exit
+	ofSleepMillis(20);
+	
+	dc1394switch_t is_iso_on = DC1394_OFF;	
+	if (dc1394_video_get_transmission(camera, &is_iso_on)!=DC1394_SUCCESS) {
+		is_iso_on = DC1394_ON; // try to shut ISO anyway
+	}
+	if (is_iso_on > DC1394_OFF) {
+		if (dc1394_video_set_transmission(camera, DC1394_OFF)!=DC1394_SUCCESS) {
+			fprintf(stderr,"Could not stop ISO transmission\n");
+		}
+	}
 
-  /* cleanup and exit */
-  dc1394_camera_free (camera);
-  camera = NULL;
+	/* cleanup and exit */
+	dc1394_capture_stop(camera);	
+	dc1394_camera_free (camera);
+	camera = NULL;
 
-  if(d) {
-    dc1394_free (d);
-    d = NULL;
-  }
+	if(d) {
+		dc1394_free (d);
+		d = NULL;
+	}
+	
 }
+
 
 
 

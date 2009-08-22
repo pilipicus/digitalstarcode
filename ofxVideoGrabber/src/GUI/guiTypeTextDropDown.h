@@ -97,12 +97,11 @@ class guiTypeTextDropDown : public guiBaseObject{
                         float bx = hitArea.x + 0;
                         float by = hitArea.y + i * (boxHeight);
 
-
-                    if(value.getValueI() == i){
-                        glColor4fv(fgColor.getSelectedColorF());
-                    }else{
-                        glColor4fv(fgColor.getNormalColorF());
-                    }
+						if(value.getValueI() == i){
+							glColor4fv(fgColor.getSelectedColorF());
+						}else{
+							glColor4fv(fgColor.getNormalColorF());
+						}
 
                         ofFill();
 
@@ -120,7 +119,9 @@ class guiTypeTextDropDown : public guiBaseObject{
                         }
 
                         glColor4fv(textColor.getColorF());
-                        displayText.renderString(vecDropList[i], bx + 2, by + boxHeight -3);
+
+                        displayText.renderString(vecDropList[i], bx + 2, by + boxHeight -4);
+
                     }
                     glTranslated(-1,0,-0.1f);
 
@@ -142,7 +143,7 @@ class guiTypeTextDropDown : public guiBaseObject{
                     ofRect(bx + boundingBox.width - boxHeight, by, boxHeight*0.666f, boxHeight*0.666f);
 
                     glColor4fv(textColor.getColorF());
-                    displayText.renderString(vecDropList[value.getValueI()], bx + 2, by + boxHeight -3);
+                    displayText.renderString(vecDropList[value.getValueI()], bx + 2, by + boxHeight -4);
 
                 }
 

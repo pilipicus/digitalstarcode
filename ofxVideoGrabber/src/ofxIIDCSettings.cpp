@@ -20,6 +20,9 @@ void ofxIIDCSettings::setupGUI()
     videoGrabber->getAllFeatureValues();
 
     panel.setup("ofxIIDCSettings", 0, 0, 480, ofGetHeight());
+//	panel.loadFont("OSP_-_NotCourierSans_1.otf", 10);
+	panel.loadFont("LiberationMono-Regular.ttf", 10);
+
     panel.addPanel("Settings", 2, false);
 	panel.setWhichPanel("Settings");
 
@@ -100,6 +103,8 @@ void ofxIIDCSettings::setupGUI()
 				}
                 vector <string> modelist;
                 modelist.push_back("MANUAL");
+				modelist.push_back("TEST");
+
 
                 if(videoGrabber->featureVals[i].hasAutoMode)
                 {
