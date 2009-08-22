@@ -5,7 +5,7 @@
 		<Option title="ofxVideoGrabber" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
-		<Option virtualFolders="libs/;src/;libs/openframeworks/;libs/openframeworks/app/;libs/openframeworks/communication/;libs/openframeworks/graphics/;libs/openframeworks/sound/;libs/openframeworks/utils/;libs/openframeworks/video/;libs/openframeworks/events/;src/Libdc1394Grabber/;addons/;addons/ofxThread/;addons/ofxThread/src/;addons/ofxControlPanel/;addons/ofxXmlSettings/;addons/ofxXmlSettings/lib/;src/Settings/;" />
+		<Option virtualFolders="libs/;src/;libs/openframeworks/;libs/openframeworks/app/;libs/openframeworks/communication/;libs/openframeworks/graphics/;libs/openframeworks/sound/;libs/openframeworks/utils/;libs/openframeworks/video/;libs/openframeworks/events/;src/Libdc1394Grabber/;addons/;addons/ofxThread/;addons/ofxThread/src/;addons/ofxXmlSettings/;addons/ofxXmlSettings/lib/;src/Settings/;src/GUI/;" />
 		<Build>
 			<Target title="Debug">
 				<Option output="bin/ofxVideoGrabber_debug" prefix_auto="1" extension_auto="1" />
@@ -100,69 +100,6 @@
 			<Add after="sed -i s/applicationName/$(TARGET_OUTPUT_BASENAME)/g  $(PROJECT_DIR)bin/clickToLaunchApp_$(TARGET_NAME).sh" />
 			<Mode after="always" />
 		</ExtraCommands>
-		<Unit filename="../../../addons/ofxControlPanel/guiBaseObject.h">
-			<Option virtualFolder="addons/ofxControlPanel/" />
-		</Unit>
-		<Unit filename="../../../addons/ofxControlPanel/guiCallbacks.h">
-			<Option virtualFolder="addons/ofxControlPanel/" />
-		</Unit>
-		<Unit filename="../../../addons/ofxControlPanel/guiColor.h">
-			<Option virtualFolder="addons/ofxControlPanel/" />
-		</Unit>
-		<Unit filename="../../../addons/ofxControlPanel/guiCustomImpl.h">
-			<Option virtualFolder="addons/ofxControlPanel/" />
-		</Unit>
-		<Unit filename="../../../addons/ofxControlPanel/guiIncludes.h">
-			<Option virtualFolder="addons/ofxControlPanel/" />
-		</Unit>
-		<Unit filename="../../../addons/ofxControlPanel/guiTextBase.h">
-			<Option virtualFolder="addons/ofxControlPanel/" />
-		</Unit>
-		<Unit filename="../../../addons/ofxControlPanel/guiType2DSlider.h">
-			<Option virtualFolder="addons/ofxControlPanel/" />
-		</Unit>
-		<Unit filename="../../../addons/ofxControlPanel/guiTypeButtonSlider.h">
-			<Option virtualFolder="addons/ofxControlPanel/" />
-		</Unit>
-		<Unit filename="../../../addons/ofxControlPanel/guiTypeCustom.h">
-			<Option virtualFolder="addons/ofxControlPanel/" />
-		</Unit>
-		<Unit filename="../../../addons/ofxControlPanel/guiTypeDrawable.h">
-			<Option virtualFolder="addons/ofxControlPanel/" />
-		</Unit>
-		<Unit filename="../../../addons/ofxControlPanel/guiTypeMultiToggle.h">
-			<Option virtualFolder="addons/ofxControlPanel/" />
-		</Unit>
-		<Unit filename="../../../addons/ofxControlPanel/guiTypePanel.h">
-			<Option virtualFolder="addons/ofxControlPanel/" />
-		</Unit>
-		<Unit filename="../../../addons/ofxControlPanel/guiTypeSlider.h">
-			<Option virtualFolder="addons/ofxControlPanel/" />
-		</Unit>
-		<Unit filename="../../../addons/ofxControlPanel/guiTypeText.h">
-			<Option virtualFolder="addons/ofxControlPanel/" />
-		</Unit>
-		<Unit filename="../../../addons/ofxControlPanel/guiTypeTextDropDown.h">
-			<Option virtualFolder="addons/ofxControlPanel/" />
-		</Unit>
-		<Unit filename="../../../addons/ofxControlPanel/guiTypeToggle.h">
-			<Option virtualFolder="addons/ofxControlPanel/" />
-		</Unit>
-		<Unit filename="../../../addons/ofxControlPanel/guiValue.h">
-			<Option virtualFolder="addons/ofxControlPanel/" />
-		</Unit>
-		<Unit filename="../../../addons/ofxControlPanel/guiXmlValue.h">
-			<Option virtualFolder="addons/ofxControlPanel/" />
-		</Unit>
-		<Unit filename="../../../addons/ofxControlPanel/ofxControlPanel.cpp">
-			<Option virtualFolder="addons/ofxControlPanel/" />
-		</Unit>
-		<Unit filename="../../../addons/ofxControlPanel/ofxControlPanel.h">
-			<Option virtualFolder="addons/ofxControlPanel/" />
-		</Unit>
-		<Unit filename="../../../addons/ofxControlPanel/simpleColor.h">
-			<Option virtualFolder="addons/ofxControlPanel/" />
-		</Unit>
 		<Unit filename="../../../addons/ofxThread/src/ofxThread.cpp">
 			<Option virtualFolder="addons/ofxThread/src/" />
 		</Unit>
@@ -186,6 +123,69 @@
 		</Unit>
 		<Unit filename="../../../addons/ofxXmlSettings/src/ofxXmlSettings.h">
 			<Option virtualFolder="addons/ofxXmlSettings/" />
+		</Unit>
+		<Unit filename="src/GUI/guiBaseObject.h">
+			<Option virtualFolder="src/GUI/" />
+		</Unit>
+		<Unit filename="src/GUI/guiCallbacks.h">
+			<Option virtualFolder="src/GUI/" />
+		</Unit>
+		<Unit filename="src/GUI/guiColor.h">
+			<Option virtualFolder="src/GUI/" />
+		</Unit>
+		<Unit filename="src/GUI/guiCustomImpl.h">
+			<Option virtualFolder="src/GUI/" />
+		</Unit>
+		<Unit filename="src/GUI/guiIncludes.h">
+			<Option virtualFolder="src/GUI/" />
+		</Unit>
+		<Unit filename="src/GUI/guiTextBase.h">
+			<Option virtualFolder="src/GUI/" />
+		</Unit>
+		<Unit filename="src/GUI/guiType2DSlider.h">
+			<Option virtualFolder="src/GUI/" />
+		</Unit>
+		<Unit filename="src/GUI/guiTypeButtonSlider.h">
+			<Option virtualFolder="src/GUI/" />
+		</Unit>
+		<Unit filename="src/GUI/guiTypeCustom.h">
+			<Option virtualFolder="src/GUI/" />
+		</Unit>
+		<Unit filename="src/GUI/guiTypeDrawable.h">
+			<Option virtualFolder="src/GUI/" />
+		</Unit>
+		<Unit filename="src/GUI/guiTypeMultiToggle.h">
+			<Option virtualFolder="src/GUI/" />
+		</Unit>
+		<Unit filename="src/GUI/guiTypePanel.h">
+			<Option virtualFolder="src/GUI/" />
+		</Unit>
+		<Unit filename="src/GUI/guiTypeSlider.h">
+			<Option virtualFolder="src/GUI/" />
+		</Unit>
+		<Unit filename="src/GUI/guiTypeText.h">
+			<Option virtualFolder="src/GUI/" />
+		</Unit>
+		<Unit filename="src/GUI/guiTypeTextDropDown.h">
+			<Option virtualFolder="src/GUI/" />
+		</Unit>
+		<Unit filename="src/GUI/guiTypeToggle.h">
+			<Option virtualFolder="src/GUI/" />
+		</Unit>
+		<Unit filename="src/GUI/guiValue.h">
+			<Option virtualFolder="src/GUI/" />
+		</Unit>
+		<Unit filename="src/GUI/guiXmlValue.h">
+			<Option virtualFolder="src/GUI/" />
+		</Unit>
+		<Unit filename="src/GUI/ofxControlPanel.cpp">
+			<Option virtualFolder="src/GUI/" />
+		</Unit>
+		<Unit filename="src/GUI/ofxControlPanel.h">
+			<Option virtualFolder="src/GUI/" />
+		</Unit>
+		<Unit filename="src/GUI/simpleColor.h">
+			<Option virtualFolder="src/GUI/" />
 		</Unit>
 		<Unit filename="src/Libdc1394Grabber/Libdc1394Grabber.cpp">
 			<Option virtualFolder="src/Libdc1394Grabber/" />
