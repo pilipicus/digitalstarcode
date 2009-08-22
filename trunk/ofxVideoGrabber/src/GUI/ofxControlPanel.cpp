@@ -39,16 +39,17 @@ void ofxControlPanel::setup(string controlPanelName, float panelX, float panelY,
       setShowText(true);
 
       // Setup depth buffer
-      glClearDepth(1.0f);
-      glDepthFunc(GL_LEQUAL);
-      glDepthMask(1);
-      glEnable(GL_DEPTH_TEST);
+	  glClearDepth(1.0f);
+	  glDepthFunc(GL_LEQUAL	);
+	  glDepthMask(GL_TRUE);
+	  glEnable(GL_DEPTH_TEST);
 }
 
 //-----------------------------
 void ofxControlPanel::loadFont( string fontName, int fontsize ){
     guiTTFFont.loadFont(fontName, fontsize);
     bool okay = guiTTFFont.bLoadedOk;
+	guiBaseObject::setFont(&guiTTFFont);
 
     if(okay){
         bUseTTFFont = true;
@@ -288,6 +289,9 @@ guiTypeButtonSlider * ofxControlPanel::addButtonSlider(string sliderName, string
 
     //add a new slider to our list
     guiTypeButtonSlider * tmp = new guiTypeButtonSlider();
+	if( bUseTTFFont ){
+        tmp->setFont(&guiTTFFont);
+    }
     tmp->setup(sliderName, 210, 15, value, min, max, false);
     tmp->xmlName = xmlName;
     tmp->parameterCallback = pCallback;
@@ -296,9 +300,6 @@ guiTypeButtonSlider * ofxControlPanel::addButtonSlider(string sliderName, string
 
 
     guiObjects.push_back(tmp);
-    if( bUseTTFFont ){
-        tmp->setFont(&guiTTFFont);
-    }
 
     panels[currentPanel]->addElement( tmp );
 
@@ -736,7 +737,13 @@ void ofxControlPanel::draw(){
 
             ofRect(saveButton.x, saveButton.y, saveButton.width,saveButton.height);
             ofSetColor(255, 255, 255);
-            ofDrawBitmapString("save", saveButton.x + 3, saveButton.y + saveButton.height -3);
+		if(bUseTTFFont) {
+			guiTTFFont.drawString("save", saveButton.x + 3, saveButton.y + saveButton.height -4);
+		}
+		else {
+			ofDrawBitmapString("save", saveButton.x + 3, saveButton.y + saveButton.height -3);
+		}
+
         ofPopStyle();
 
         ofPushStyle();
@@ -747,7 +754,12 @@ void ofxControlPanel::draw(){
 
             ofRect(restoreButton.x, restoreButton.y, restoreButton.width,restoreButton.height);
             ofSetColor(255, 255, 255);
-            ofDrawBitmapString("restore", restoreButton.x + 3, restoreButton.y + restoreButton.height -3);
+		if(bUseTTFFont) {
+			guiTTFFont.drawString("restore", restoreButton.x + 3, restoreButton.y + restoreButton.height -4);			
+		}
+		else {
+			ofDrawBitmapString("restore", restoreButton.x + 3, restoreButton.y + restoreButton.height -3);
+		}	
         ofPopStyle();
 
 
