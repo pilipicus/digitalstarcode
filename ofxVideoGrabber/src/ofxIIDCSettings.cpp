@@ -169,7 +169,7 @@ void ofxIIDCSettings::parameterCallback(float param1, float param2, int param_mo
 
     if(param_mode != NULL_MODE)
     {
-        cout << "set mode called: "  << param_mode << " param_id = " << param_id << endl;
+        //cout << "set mode called: "  << param_mode << " param_id = " << param_id << endl;
         videoGrabber->setFeatureMode(param_mode, param_id);
     }
     else {
@@ -177,7 +177,7 @@ void ofxIIDCSettings::parameterCallback(float param1, float param2, int param_mo
             videoGrabber->setFeatureValue(param1, param2, param_id);
         }
         else {
-            cout << "set feature called: " << param1 << " " << param_id << endl;
+            //cout << "set feature called: " << param1 << " " << param_id << endl;
             videoGrabber->setFeatureValue(param1, param_id);
         }
     }
