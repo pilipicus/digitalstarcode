@@ -103,7 +103,6 @@ void ofxIIDCSettings::setupGUI()
 				}
                 vector <string> modelist;
                 modelist.push_back("MANUAL");
-				modelist.push_back("TEST");
 
 
                 if(videoGrabber->featureVals[i].hasAutoMode)

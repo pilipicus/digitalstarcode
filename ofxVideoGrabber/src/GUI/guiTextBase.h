@@ -83,12 +83,12 @@ class guiTextBase{
         }
 
         //--------------------------------------------
-        virtual void renderString(string textToRender, float x, float y, float z = 0){
+        virtual void renderString(string textToRender, float x, float y){
 
             if(bRealFont){
                 ourFont->drawString(textToRender, x, y);
             }
-            else ofDrawBitmapString(textToRender, x, y , z);
+            else ofDrawBitmapString(textToRender, x, y);
         }
 
         //--------------------------------------------
