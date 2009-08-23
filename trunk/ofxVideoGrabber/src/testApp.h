@@ -13,6 +13,8 @@ class testApp : public ofBaseApp{
 		void update();
 		void draw();
 
+		void calculateCaptureFramerate();
+
 		void keyPressed(int key);
 		void keyReleased(int key);
 		void mouseMoved(int x, int y );
@@ -32,8 +34,8 @@ class testApp : public ofBaseApp{
 		char                buf[255];
 		char                buf2[255];
 		float 	            mytimeNow, mytimeThen, myframeRate;
-		double 	            myfps;
-		int                 myframes;
+		float 	            myfps;
+		float                 myframes;
 };
 
 #endif

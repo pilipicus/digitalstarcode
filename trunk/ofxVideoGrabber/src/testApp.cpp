@@ -8,15 +8,21 @@ void testApp::setup(){
 	camHeight 		= 480;
 	appWidth        = ofGetWidth();
 	appHeight       = ofGetHeight();
-	mytimeNow		= 0.0f;
+	mytimeThen		= 0.0f;
 
 	ofSetVerticalSync(true);
 
-	bool result = vidGrabber.initGrabber( camWidth, camHeight, VID_FORMAT_YUV422, VID_FORMAT_RGB, 30 );
+    bool result = vidGrabber.initGrabber( camWidth, camHeight, VID_FORMAT_YUV422, VID_FORMAT_RGB, 30 );
 	// or like this:
 	//bool result = vidGrabber.initGrabber( camWidth, camHeight, VID_FORMAT_GREYSCALE, VID_FORMAT_GREYSCALE, 30, true, new Libdc1394Grabber);
 	// or like this:
 	//bool result = vidGrabber.initGrabber( camWidth, camHeight, VID_FORMAT_YUV411, VID_FORMAT_RGB, 30, true, new Libdc1394Grabber, new ofxIIDCSettings);
+
+	if(result) {
+	    ofLog(OF_LOG_NOTICE,"Camera succesfully initialized.");
+	} else {
+	    ofLog(OF_LOG_FATAL_ERROR,"Camera failed to initialize.");
+	}
 
 }
 
@@ -30,16 +36,7 @@ void testApp::update(){
 
 	if (vidGrabber.isFrameNew()){
 
-        /* Framerate display */
-        mytimeNow = ofGetElapsedTimef();
-		if( (mytimeNow-mytimeThen) > 0.05f || myframes == 0 ) {
-			myfps = (double) myframes / (mytimeNow-mytimeThen);
-			mytimeThen = mytimeNow;
-			myframes = 0;
-			myframeRate = 0.9f * myframeRate + 0.1f * myfps;
-			sprintf(buf2,"Capture framerate : %f",myframeRate);
-		}
-		myframes++;
+        calculateCaptureFramerate();
 	}
 
     sprintf(buf,"App framerate : %f",ofGetFrameRate());
@@ -57,16 +54,25 @@ void testApp::draw(){
 	ofDrawBitmapString(buf2,30,appHeight - 20);
 }
 
+//--------------------------------------------------------------
+void testApp::calculateCaptureFramerate()
+{
+    mytimeNow = ofGetElapsedTimef();
+    if( (mytimeNow-mytimeThen) > 0.05f || myframes == 0 ) {
+        myfps = myframes / (mytimeNow-mytimeThen);
+        mytimeThen = mytimeNow;
+        myframes = 0;
+        myframeRate = 0.9f * myframeRate + 0.1f * myfps;
+        sprintf(buf2,"Capture framerate : %f",myframeRate);
+    }
+    myframes++;
+}
 
 //--------------------------------------------------------------
 void testApp::keyPressed  (int key){
 
 	if (key == 's' || key == 'S'){
 		vidGrabber.videoSettings();
-	}
-
-	if (key == 27) {
-        //vidGrabber.close();
 	}
 
 }
