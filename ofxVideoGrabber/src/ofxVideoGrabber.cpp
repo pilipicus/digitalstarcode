@@ -49,9 +49,23 @@ bool ofxVideoGrabber::initGrabber( int _width, int _height, int _format, int _ta
         }
         else
         {
-            cout << "** Texture allocation failed. Target format must be either VID_FORMAT_GREYSCALE or VID_FORMAT_RGB **" << endl;
+            ofLog(OF_LOG_FATAL_ERROR,"Texture allocation failed. Target format must be either VID_FORMAT_GREYSCALE or VID_FORMAT_RGB");
+            initResult = false;
         }
     }
+    else
+    {
+        if( targetFormat == VID_FORMAT_GREYSCALE || targetFormat == VID_FORMAT_RGB)
+        {
+            pixels = new unsigned char[width * height * bpp];
+            memset(pixels, 0, width*height*bpp);
+        }
+        else
+        {
+            ofLog(OF_LOG_FATAL_ERROR,"Wrong target output format. Target format must be either VID_FORMAT_GREYSCALE or VID_FORMAT_RGB");
+            initResult = false;
+        }
+     }
 
     settings->setupVideoSettings(videoGrabber);
 
