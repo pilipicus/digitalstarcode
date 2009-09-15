@@ -90,7 +90,6 @@ bool ofxVideoGrabber::isFrameNew()
 unsigned char* ofxVideoGrabber::getPixels()
 {
     return pixels;
-    //return videoGrabber->getPixels();
 }
 
 //--------------------------------------------------------------------
