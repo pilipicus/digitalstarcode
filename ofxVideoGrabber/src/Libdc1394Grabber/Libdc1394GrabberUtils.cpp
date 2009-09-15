@@ -1,5 +1,7 @@
 #include "Libdc1394GrabberUtils.h"
 
+#include <iostream>
+using namespace std;
 
 /*-----------------------------------------------------------------------
  *  Prints the type of format to standard out
@@ -32,10 +34,18 @@ void Libdc1394GrabberUtils::print_format( uint32_t format )
     print_case(DC1394_VIDEO_MODE_1600x1200_MONO8);
     print_case(DC1394_VIDEO_MODE_1280x960_MONO16);
     print_case(DC1394_VIDEO_MODE_1600x1200_MONO16);
+    print_case(DC1394_VIDEO_MODE_EXIF);
+    print_case(DC1394_VIDEO_MODE_FORMAT7_0);
+    print_case(DC1394_VIDEO_MODE_FORMAT7_1);
+    print_case(DC1394_VIDEO_MODE_FORMAT7_2);
+    print_case(DC1394_VIDEO_MODE_FORMAT7_3);
+    print_case(DC1394_VIDEO_MODE_FORMAT7_4);
+    print_case(DC1394_VIDEO_MODE_FORMAT7_5);
+    print_case(DC1394_VIDEO_MODE_FORMAT7_6);
+    print_case(DC1394_VIDEO_MODE_FORMAT7_7);
 
   default:
     fprintf(stderr,"Unknown format\n");
-//    exit(1);
   }
 
 }
@@ -93,7 +103,6 @@ void Libdc1394GrabberUtils::print_color_coding( uint32_t color_id )
 
   default:
     fprintf(stderr,"Unknown color coding = %d\n",color_id);
-//    exit(1);
   }
 }
 
@@ -103,25 +112,27 @@ void Libdc1394GrabberUtils::print_color_coding( uint32_t color_id )
  *-----------------------------------------------------------------------*/
 void Libdc1394GrabberUtils::print_mode_info( dc1394camera_t *camera , dc1394video_mode_t mode )
 {
+    printf("**********************************************\n");
+    printf("Mode: ");
+    print_format(mode);
+    printf("\n");
 
-  printf("Mode: ");
-  print_format(mode);
-  printf("\n");
+    dc1394framerates_t framerates;
+    if(dc1394_video_get_supported_framerates(camera,mode,&framerates) != DC1394_SUCCESS) {
+        fprintf( stderr, "Can't get frame rates\n");
+    }
 
-  dc1394framerates_t framerates;
-  if(dc1394_video_get_supported_framerates(camera,mode,&framerates) != DC1394_SUCCESS) {
-    fprintf( stderr, "Can't get frame rates\n");
-  //  exit(1);
-  }
+    printf("Frame Rates:\n");
 
-  printf("Frame Rates:\n");
-  for(unsigned int j = 0; j < framerates.num; j++ ) {
-    dc1394framerate_t rate = framerates.framerates[j];
-    float f_rate;
-    dc1394_framerate_as_float(rate,&f_rate);
-    printf("  [%d] rate = %f\n",j,f_rate );
-  }
+    for(unsigned int j = 0; j < framerates.num; j++ )
+    {
+        dc1394framerate_t rate = framerates.framerates[j];
+        float f_rate;
+        dc1394_framerate_as_float(rate,&f_rate);
+        printf("  [%d] rate = %f\n",j,f_rate );
+    }
 
+    printf("**********************************************\n");
 }
 
 
@@ -147,20 +158,24 @@ dc1394error_t Libdc1394GrabberUtils::getBayerTile( dc1394camera_t* camera, dc139
    {
       default:
       case 0x59595959:	// YYYY
-	 // no bayer
-	 *bayerPattern = (dc1394color_filter_t) 0;
+	 //*bayerPattern = (dc1394color_filter_t) 0;
+	 cout << "using default Bayer" << endl;
 	 break;
       case 0x52474742:	// RGGB
 	 *bayerPattern = DC1394_COLOR_FILTER_RGGB;
+	 cout << "RGGB Bayer" << endl;
 	 break;
       case 0x47425247:	// GBRG
 	 *bayerPattern = DC1394_COLOR_FILTER_GBRG;
+	 cout << "GBRG Bayer" << endl;
 	 break;
       case 0x47524247:	// GRBG
 	 *bayerPattern = DC1394_COLOR_FILTER_GRBG;
+	 cout << "GRBG Bayer" << endl;
 	 break;
       case 0x42474752:	// BGGR
 	 *bayerPattern = DC1394_COLOR_FILTER_BGGR;
+	 cout << "BGGR Bayer" << endl;
 	 break;
    }
 

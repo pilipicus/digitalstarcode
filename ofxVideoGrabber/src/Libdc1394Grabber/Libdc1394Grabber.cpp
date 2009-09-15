@@ -9,7 +9,6 @@ dc1394_t* Libdc1394Grabber::d = NULL;
 
 Libdc1394Grabber::Libdc1394Grabber()
 {
-	cout << "Libdc1394Grabber() constructor" << endl;
 
 	conversionNeeded = false;
 	grabbedFirstImage = false;
@@ -18,7 +17,7 @@ Libdc1394Grabber::Libdc1394Grabber()
 	ISO_SPEED = DC1394_ISO_SPEED_400;
 
 	bayerMethod = DC1394_BAYER_METHOD_BILINEAR;
-	bayerPattern = DC1394_COLOR_FILTER_GBRG;
+	bayerPattern = DC1394_COLOR_FILTER_RGGB;
 
 	availableFeatureAmount = 0;
 
@@ -28,9 +27,7 @@ Libdc1394Grabber::Libdc1394Grabber()
 
 Libdc1394Grabber::~Libdc1394Grabber()
 {
-	
-	cout << "Libdc1394Grabber() destructor" << endl;
-	fprintf(stderr,"Libdc1394Grabber() destructor\n");
+
 	if (camera != NULL )
 	{
 		fprintf(stderr,"stop transmission\n");
@@ -87,11 +84,11 @@ bool Libdc1394Grabber::initCam( dc1394video_mode_t _videoMode, dc1394framerate_t
 
     /* Initialise libdc1394 */
     if(!d) {
-	d = dc1394_new ();
+        d = dc1394_new ();
     }
     if (!d) {
-        cout << "Failed to initialise libdc1394." << endl;
-       return false;
+        ofLog(OF_LOG_FATAL_ERROR,"Failed to initialise libdc1394.");
+        return false;
     }
 
     /* Find cameras */
@@ -100,8 +97,8 @@ bool Libdc1394Grabber::initCam( dc1394video_mode_t _videoMode, dc1394framerate_t
 
     /* Verify that we have at least one camera */
     if (list->num == 0) {
-        dc1394_log_error("No cameras found");
-		cout << " No cameras found!" << endl;
+		dc1394_log_error("No cameras found!");
+		ofLog(OF_LOG_FATAL_ERROR, "No cameras found!");
         return false;
     }
 
@@ -115,80 +112,79 @@ bool Libdc1394Grabber::initCam( dc1394video_mode_t _videoMode, dc1394framerate_t
 	}
 */
 
-	printf( "There were %d cameras found attached to your PC\n", numCameras );
+	ofLog(OF_LOG_NOTICE,"There were %d cameras found attached to your PC\n", numCameras );
 
-	/*-----------------------------------------------------------------------
-	*  get the camera nodes and describe them as we find them
-	*-----------------------------------------------------------------------*/
-	/*
-	if (numCameras < 1)  { fprintf(stderr, "no cameras found :(\n"); }
-	camera = cameras[0];
-	printf("working with the first camera on the bus\n");
-	// free the other cameras
-	for (i=1;i<numCameras;i++) { dc1394_free_camera(cameras[i]); }
-	*/
-
-// maybe the problem here is that we are using the first camera.
-	camera = dc1394_camera_new (d, list->ids[++g_cameraIndex].guid);                     /* Work with first camera */
+    /* Use first camera */
+	camera = dc1394_camera_new (d, list->ids[++g_cameraIndex].guid);
     if (!camera) {
         dc1394_log_error("Failed to initialize camera with guid %llx", list->ids[0].guid);
-        return 1;
+        return false;
     }
     dc1394_camera_free_list (list);
 	free(cameras);
 
-	cout << "Using Camera with GUID " << camera->guid << endl;
+	ofLog(OF_LOG_NOTICE, "Using Camera with GUID %u",camera->guid);
 
-	// get video modes:
-	if (dc1394_video_get_supported_modes(camera,&video_modes)!=DC1394_SUCCESS)  { fprintf(stderr,"Can't get video modes\n"); cleanupCamera(); }
-
-
-	printf("Listing Modes\n");
-	for(i = 0; i < video_modes.num; i++ )  { dc1394video_mode_t mode = video_modes.modes[i]; Libdc1394GrabberUtils::print_mode_info( camera , mode ); }
-
-
-/*
-	// select highest res mode:
-	for (i=video_modes.num-1;i>=0;i--)
+	/* Get video modes */
+	if (dc1394_video_get_supported_modes(camera,&video_modes) != DC1394_SUCCESS)
 	{
-		if (!dc1394_is_video_mode_scalable(video_modes.modes[i]))
-		{
-			dc1394_get_color_coding_from_video_mode(camera,video_modes.modes[i], &coding);
-			if (coding==DC1394_COLOR_CODING_MONO8)
-			{
-				video_mode = video_modes.modes[i];
-				break;
-			}
-		}
-	}
-*/
+	    ofLog(OF_LOG_FATAL_ERROR, "Can't get video modes");
+	    cleanupCamera();
+	    return false;
+    }
 
-	// search the list for our preferred video mode
+	ofLog(OF_LOG_NOTICE, "Listing Modes");
+	for(i = 0; i < video_modes.num; i++ )
+	{
+	    dc1394video_mode_t mode = video_modes.modes[i];
+	    Libdc1394GrabberUtils::print_mode_info( camera , mode );
+    }
+
+	/* Search the list for our preferred video mode */
 	bool foundVideoMode = false;
   	for (i=video_modes.num-1;i>=0;i--)
 	{
-		if( video_modes.modes[i] == _videoMode ) { foundVideoMode = true; break; }
+		if( video_modes.modes[i] == _videoMode )
+		{
+		    foundVideoMode = true;
+            break;
+		}
 	}
 
-
 	video_mode = _videoMode;
+	cout << "Video Mode = " << video_mode << endl;
 
 	dc1394_get_color_coding_from_video_mode(camera, video_mode, &coding);
 	unsigned int source_bpp;
 	dc1394_get_color_coding_bit_size(coding,&source_bpp);
 	cout << "Source bpp = " << source_bpp  << endl;
 
-	//dc1394_get_color_coding_from_video_mode(camera,video_modes.modes[i], &coding);
+	//if ((dc1394_is_video_mode_scalable(video_modes.modes[i]))|| (coding!=DC1394_COLOR_CODING_MONO8))
+	//{ fprintf(stderr,"Could not get a valid MONO8 mode\n"); cleanupCamera(); }
 
-	//if ((dc1394_is_video_mode_scalable(video_modes.modes[i]))|| (coding!=DC1394_COLOR_CODING_MONO8))  { fprintf(stderr,"Could not get a valid MONO8 mode\n"); cleanupCamera(); }
-
-	//cout << endl << "**** Chosen Color coding ****" << endl;
-	//Libdc1394GrabberUtils::print_color_coding( coding );
-	//cout << endl << "*****************************" << endl << endl;
+	cout << endl << "**** Chosen Color coding ****" << endl;
+	Libdc1394GrabberUtils::print_color_coding( coding );
+	cout << endl << "*****************************" << endl << endl;
 
 	sourceFormatLibDC = coding;
 	sourceFormat = Libdc1394GrabberVideoFormatHelper::libcd1394ColorFormatToVidFormat(  coding );
 
+
+    cout << endl << "**** get color codings:" << endl;
+    dc1394color_codings_t color_modes;
+    err = dc1394_format7_get_color_codings(camera, video_mode, &color_modes);
+
+    if(err == DC1394_SUCCESS) {
+        for (i=color_modes.num-1;i>=0;i--)
+        {
+            cout << i << " -> " << color_modes.codings[i] << endl;
+        }
+    } else {
+        cout << "could not get color codings..." << endl;
+
+    }
+
+	cout << "*******" << endl;
 
 	// get framerates
 	if (dc1394_video_get_supported_framerates(camera,video_mode,&framerates)!=DC1394_SUCCESS)
@@ -356,16 +352,26 @@ void Libdc1394Grabber::captureFrame()
 
 void Libdc1394Grabber::processCameraImageData( unsigned char* _cameraImageData )
 {
+    static bool writeonce = true;
+
 	if( sourceFormatLibDC == DC1394_COLOR_CODING_RAW8 || sourceFormatLibDC == DC1394_COLOR_CODING_MONO8 )
 	{
 
 		if( targetFormat == VID_FORMAT_GREYSCALE || targetFormat == VID_FORMAT_Y8 )
 		{
 			pixels = _cameraImageData;
+//			if(writeonce) {
+//			    writeonce = false;
+//                cout << "processCameraImageData() targetFormat  = VID_FORMAT_GREYSCALE || targetFormat == VID_FORMAT_Y8" << endl;
+//			}
 		}
 		else if( targetFormat == VID_FORMAT_RGB )
 		{
 			dc1394_bayer_decoding_8bit( _cameraImageData, pixels, width, height,  bayerPattern, bayerMethod );
+			if(writeonce) {
+			    writeonce = false;
+                cout << "processCameraImageData() targetFormat  = VID_FORMAT_RGB" << endl;
+			}
 		}
 		else if ( targetFormat == VID_FORMAT_BGR )
 		{
@@ -436,24 +442,26 @@ void Libdc1394Grabber::setBayerPatternIfNeeded()
 {
 	if( sourceFormatLibDC == DC1394_COLOR_CODING_RAW8 || sourceFormatLibDC == DC1394_COLOR_CODING_MONO8 || sourceFormatLibDC == DC1394_COLOR_CODING_MONO16 || sourceFormatLibDC == DC1394_COLOR_CODING_RAW16 )
 	{
-		if( targetFormat == VID_FORMAT_RGB || targetFormat == VID_FORMAT_BGR )
+		if( targetFormat == VID_FORMAT_RGB || targetFormat == VID_FORMAT_BGR || targetFormat == VID_FORMAT_GREYSCALE )
 		{
 
-		dc1394color_filter_t tmpBayerPattern;
-		if( dc1394_format7_get_color_filter(camera, video_mode, &tmpBayerPattern) != DC1394_SUCCESS )
-		{
-			cout << "Libdc1394Grabber::setBayerPatternIfNeeded(), Failed to get the dc1394_format7_get_color_filter." << endl;
-		}
-		else
-		{
-			cout << "Libdc1394Grabber::setBayerPatternIfNeeded(), We got a pattern, it was: " << tmpBayerPattern << endl;
-		}
+//		dc1394color_filter_t tmpBayerPattern;
+//		if( dc1394_format7_get_color_filter(camera, video_mode, &tmpBayerPattern) != DC1394_SUCCESS )
+//		{
+//			cout << "Libdc1394Grabber::setBayerPatternIfNeeded(), Failed to get the dc1394_format7_get_color_filter." << endl;
+//		}
+//		else
+//		{
+//			cout << "Libdc1394Grabber::setBayerPatternIfNeeded(), We got a pattern, it was: " << tmpBayerPattern << endl;
+//		}
 
 
 			if ( Libdc1394GrabberUtils::getBayerTile( camera, &bayerPattern ) != DC1394_SUCCESS )
 			{
-				fprintf( stderr, "************* Could not get bayer tile pattern from camera\n *********" );
-			} else { cout << "grabbed a bayer pattern from the camera" << endl; }
+				ofLog(OF_LOG_WARNING,"Could not get bayer tile pattern from camera" );
+			} else {
+			    ofLog(OF_LOG_WARNING,"Grabbed a bayer pattern from the camera");
+            }
 		}
 
 	}
@@ -463,11 +471,11 @@ void Libdc1394Grabber::setBayerPatternIfNeeded()
 void Libdc1394Grabber::cleanupCamera()
 {
 	stopThread();
-	while(isThreadRunning()) 1;
+	//while(isThreadRunning()) 1;
 	//this sleep seems necessary, at least on OSX, to avoid an occasional hang on exit
 	ofSleepMillis(20);
-	
-	dc1394switch_t is_iso_on = DC1394_OFF;	
+
+	dc1394switch_t is_iso_on = DC1394_OFF;
 	if (dc1394_video_get_transmission(camera, &is_iso_on)!=DC1394_SUCCESS) {
 		is_iso_on = DC1394_ON; // try to shut ISO anyway
 	}
@@ -478,7 +486,7 @@ void Libdc1394Grabber::cleanupCamera()
 	}
 
 	/* cleanup and exit */
-	dc1394_capture_stop(camera);	
+	dc1394_capture_stop(camera);
 	dc1394_camera_free (camera);
 	camera = NULL;
 
@@ -486,7 +494,7 @@ void Libdc1394Grabber::cleanupCamera()
 		dc1394_free (d);
 		d = NULL;
 	}
-	
+
 }
 
 
