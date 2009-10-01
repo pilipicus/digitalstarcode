@@ -41,7 +41,17 @@ dc1394video_mode_t  Libdc1394GrabberVideoFormatHelper::videoFormatFromParams( in
 	return DC1394_VIDEO_MODE_640x480_MONO8;
 }
 
+dc1394color_coding_t  Libdc1394GrabberVideoFormatHelper::colorCodingFormat7FromParams( int _vidFormat, bool _forceColor ){
+   if( _vidFormat == VID_FORMAT_RGB )				{ return DC1394_COLOR_CODING_RGB8; }
+	else if( _vidFormat == VID_FORMAT_YUV411 )		{ return DC1394_COLOR_CODING_YUV411; }
+	else if( _vidFormat == VID_FORMAT_YUV422 )		{ return DC1394_COLOR_CODING_YUV422; }
+	else if( _vidFormat == VID_FORMAT_YUV444 )		{ return DC1394_COLOR_CODING_YUV422; }
+	else if( _vidFormat == VID_FORMAT_GREYSCALE )	{ return DC1394_COLOR_CODING_MONO8;}
+	else if( _vidFormat == VID_FORMAT_Y8 )			{ return DC1394_COLOR_CODING_MONO8;}
+	else if( _vidFormat == VID_FORMAT_Y16 )			{ return DC1394_COLOR_CODING_MONO16; }
 
+	return DC1394_COLOR_CODING_RGB8;
+}
 
 dc1394video_mode_t  Libdc1394GrabberVideoFormatHelper::videoFormatFromParams160x120( int _vidFormat, bool _forceColor )
 {

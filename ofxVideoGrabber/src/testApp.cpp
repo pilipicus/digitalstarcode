@@ -4,22 +4,38 @@
 //--------------------------------------------------------------
 void testApp::setup(){
 
-	camWidth 		= 640;	// try to grab at this size.
-	camHeight 		= 480;
+	camWidth 		= 320;	// try to grab at this size.
+	camHeight 		= 240;
 	appWidth        = ofGetWidth();
 	appHeight       = ofGetHeight();
 	mytimeThen		= 0.0f;
 
 	ofSetVerticalSync(true);
+	ofSetLogLevel(OF_LOG_VERBOSE);
 
-    bool result = vidGrabber.initGrabber( camWidth, camHeight, VID_FORMAT_YUV422, VID_FORMAT_RGB, 30 );
+    //vidGrabber.setDeviceID("814436102632562");
+    //vidGrabber.setDeviceID(0);
+
+
+    Libdc1394Grabber *sdk = new Libdc1394Grabber;
+	sdk->setFormat7(false);
+	sdk->listDevices();
+	sdk->setDiscardFrames(true);
+	//sdk->setROI(x,y,width,height);*/
+
+	//vidGrabber.setVerbose(true);
+
+    bool result = vidGrabber.initGrabber( camWidth, camHeight, VID_FORMAT_YUV422, VID_FORMAT_RGB, 30, true, sdk );
+
+    //bool result = vidGrabber.initGrabber( camWidth, camHeight, VID_FORMAT_YUV422, VID_FORMAT_RGB, 30 );
 	// or like this:
 	//bool result = vidGrabber.initGrabber( camWidth, camHeight, VID_FORMAT_GREYSCALE, VID_FORMAT_GREYSCALE, 30, true, new Libdc1394Grabber);
 	// or like this:
 	//bool result = vidGrabber.initGrabber( camWidth, camHeight, VID_FORMAT_YUV411, VID_FORMAT_RGB, 30, true, new Libdc1394Grabber, new ofxIIDCSettings);
 
+
 	if(result) {
-	    ofLog(OF_LOG_NOTICE,"Camera succesfully initialized.");
+	    ofLog(OF_LOG_VERBOSE,"Camera successfully initialized.");
 	} else {
 	    ofLog(OF_LOG_FATAL_ERROR,"Camera failed to initialize.");
 	}

@@ -27,6 +27,14 @@ class guiTypeTextDropDown : public guiBaseObject{
             bShowDropDown = false;
         }
 
+        //-----------------------------------------------
+        virtual void updateValue()
+        {
+            if(parameterCallback != NULL) {
+                parameterCallback->Execute(-1,-1,value.getValueI(), callback_id);
+            }
+        }
+
         //-----------------------------------------------.
         void update()
         {

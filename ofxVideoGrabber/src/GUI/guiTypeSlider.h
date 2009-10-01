@@ -16,6 +16,15 @@ class guiTypeSlider : public guiBaseObject{
             name = sliderName;
         }
 
+
+        //-----------------------------------------------
+        virtual void updateValue()
+        {
+            if(parameterCallback != NULL) {
+                parameterCallback->Execute(value.getValueF(),-1, -1, callback_id);
+            }
+        }
+
         //-----------------------------------------------.
         void updateGui(float x, float y, bool firstHit, bool isRelative = false){
             if( state == SG_STATE_SELECTED){

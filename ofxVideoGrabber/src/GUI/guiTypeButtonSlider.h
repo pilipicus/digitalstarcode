@@ -103,11 +103,13 @@ class guiTypeButtonSlider : public guiBaseObject{
         }
 
         //------------------------------------------------
-        void setup(string buttonSliderName, float panelWidth, float panelHeight, float value, float min, float max, bool isInt){
+        void setup(string buttonSliderName, float panelWidth, float panelHeight, float defaultVal, float min, float max, bool isInt){
 
             /* slider setup */
             slider = new guiTypeSlider();
-            slider->setup(buttonSliderName, value, min, max);
+            slider->setup(buttonSliderName, defaultVal, min, max);
+            value.addValue(defaultVal, min, max);
+
             slider->setDimensions(180, 10);
             if(isInt){
                 slider->setTypeInt();
@@ -133,6 +135,7 @@ class guiTypeButtonSlider : public guiBaseObject{
             name = buttonSliderName;
 
             setDimensions(panelWidth, panelHeight);
+
         }
 
         //-----------------------------------------------
@@ -156,13 +159,27 @@ class guiTypeButtonSlider : public guiBaseObject{
         }
 
         //-----------------------------------------------
+        virtual void setValue(float _value, int whichParam) {
+            slider->value.setValue(_value, whichParam);
+        }
+
+        //-----------------------------------------------
+        virtual void updateValue() {
+
+            if(parameterCallback != NULL) {
+                parameterCallback->Execute(slider->value.getValueF(),-1, -1, callback_id);
+            }
+        }
+
+
+        //-----------------------------------------------
         virtual void update(){
             updateText();
             slider->setShowText(true);
 
             slider->setPosition(boundingBox.x + 15, boundingBox.y );
-            leftButton->setPosition(boundingBox.x,boundingBox.y + leftButton->displayText.getTextHeight() + leftButton->titleSpacing);
-            rightButton->setPosition(boundingBox.x + boundingBox.width - rightButton->getWidth(),boundingBox.y + leftButton->displayText.getTextHeight() + leftButton->titleSpacing);
+            leftButton->setPosition(boundingBox.x,boundingBox.y + slider->displayText.getTextHeight() + leftButton->titleSpacing);
+            rightButton->setPosition(boundingBox.x + boundingBox.width - rightButton->getWidth(),boundingBox.y + slider->displayText.getTextHeight() + leftButton->titleSpacing);
 
             slider->update();
             leftButton->update();
@@ -224,6 +241,7 @@ class guiTypeButtonSlider : public guiBaseObject{
                 timeThen = timeNow;
             }
 
+            value.setValue(slider->value.getValueF()); // for xml settings saving
             if(parameterCallback != NULL) {
                 parameterCallback->Execute(slider->value.getValueF(),-1, -1, callback_id);
             }

@@ -81,7 +81,7 @@ dc1394framerate_t Libdc1394GrabberFramerateHelper::numToDcLibFramerate( int rate
 }
 
 
-string Libdc1394GrabberFramerateHelper::DcLibFramerateToString( dc1394framerate_t _framerate )
+const char* Libdc1394GrabberFramerateHelper::DcLibFramerateToString( dc1394framerate_t _framerate )
 {
 	switch ( _framerate )
 	{

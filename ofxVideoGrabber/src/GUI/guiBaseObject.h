@@ -301,22 +301,27 @@ class guiBaseObject{
             textColor.setSelectedColor(selR, selG, selB, selA);
          }
 
+         virtual void setValue(float _value, int whichParam) {
+             value.setValue(_value,whichParam);
+         }
+
+        virtual void updateValue() {
+
+        }
+
         //list of properties
         //------------------
         string name;
         string drawStr;
         string xmlName;
 
-        //guiValue value;
-        guiValue value;
+        ofRectangle boundingBox;
+        ofRectangle hitArea;
 
         guiColor fgColor;
         guiColor bgColor;
         guiColor outlineColor;
         guiColor textColor;
-
-        ofRectangle boundingBox;
-        ofRectangle hitArea;
 
         int numDecimalPlaces;
 
@@ -341,5 +346,10 @@ class guiBaseObject{
         bool readOnly;
         int  state;
         int  dataType;
+
+//protected:
+
+        guiValue value;
+
 };
 

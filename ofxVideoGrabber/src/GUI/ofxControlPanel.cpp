@@ -19,7 +19,7 @@ ofxControlPanel::ofxControlPanel(){
     hidden          = false;
     bDraggable      = true;
 
-    currentXmlFile = "";
+    currentXmlFile = "controlPanelSettings.xml";
     incrementSaveName = "";
     xmlObjects.clear();
 }
@@ -129,7 +129,8 @@ void ofxControlPanel::setSliderWidth(int width){
 }
 
 //---------------------------------------------
-guiTypeToggle * ofxControlPanel::addToggle(string name, string xmlName, bool defaultValue){
+guiTypeToggle * ofxControlPanel::addToggle(string name, string xmlName, bool defaultValue, BaseCallback* pCallback, int _callback_id)
+{
     if( currentPanel < 0 || currentPanel >= (int) panels.size() )return NULL;
 
     //add a new toggle to our list
@@ -139,22 +140,26 @@ guiTypeToggle * ofxControlPanel::addToggle(string name, string xmlName, bool def
     tmp->setup(name, (bool)defaultValue);
     tmp->setDimensions(14, 14);
     tmp->setTypeBool();
+    tmp->parameterCallback = pCallback;
+    tmp->callback_id = _callback_id;
     tmp->xmlName = xmlName;
 
     xmlObjects.push_back( xmlAssociation(tmp, xmlName, 1) );
-    panels[currentPanel]->addElement( tmp );
-
     guiObjects.push_back(tmp);
+
     if( bUseTTFFont ){
         tmp->setFont(&guiTTFFont);
     }
+
+    panels[currentPanel]->addElement( tmp );
 
     return tmp;
 }
 
 
 //---------------------------------------------
-guiTypeMultiToggle * ofxControlPanel::addMultiToggle(string name, string xmlName, int defaultBox, vector <string> boxNames){
+guiTypeMultiToggle * ofxControlPanel::addMultiToggle(string name, string xmlName, int defaultBox, vector <string> boxNames, BaseCallback* pCallback, int _callback_id)
+{
     if( currentPanel < 0 || currentPanel >= (int) panels.size() )return NULL;
 
     //add a new multi toggle to our list
@@ -164,6 +169,8 @@ guiTypeMultiToggle * ofxControlPanel::addMultiToggle(string name, string xmlName
     tmp->setup(name, defaultBox, boxNames);
     tmp->setDimensions(180, boxNames.size()*(guiTypeMultiToggle::boxSize + guiTypeMultiToggle::boxSpacing) + 2);
     tmp->xmlName = xmlName;
+    tmp->parameterCallback = pCallback;
+    tmp->callback_id = _callback_id;
 
     //we can say we want to an int or a float!
     tmp->setTypeInt();
@@ -204,6 +211,7 @@ guiTypeSlider * ofxControlPanel::addSlider(string sliderName, string xmlName, fl
 
     xmlObjects.push_back( xmlAssociation(tmp, xmlName, 1) );
     guiObjects.push_back(tmp);
+
     if( bUseTTFFont ){
         tmp->setFont(&guiTTFFont);
     }
@@ -289,17 +297,26 @@ guiTypeButtonSlider * ofxControlPanel::addButtonSlider(string sliderName, string
 
     //add a new slider to our list
     guiTypeButtonSlider * tmp = new guiTypeButtonSlider();
-	if( bUseTTFFont ){
-        tmp->setFont(&guiTTFFont);
-    }
+
+    //setup and dimensions
     tmp->setup(sliderName, 210, 15, value, min, max, false);
     tmp->xmlName = xmlName;
     tmp->parameterCallback = pCallback;
     tmp->callback_id = _callback_id;
-    //xmlObjects.push_back( xmlAssociation(tmp, xmlName, 1) );
 
+    //we can say we want to an int or a float!
+    if(isInt){
+        tmp->setTypeInt();
+    }else{
+        tmp->setTypeFloat();
+    }
 
+    xmlObjects.push_back( xmlAssociation(tmp, xmlName, 1) );
     guiObjects.push_back(tmp);
+
+	if( bUseTTFFont ) {
+        tmp->setFont(&guiTTFFont);
+    }
 
     panels[currentPanel]->addElement( tmp );
 
@@ -388,7 +405,7 @@ bool ofxControlPanel::getValueB(string xmlName, int whichParam){
             }
         }
     }
-    ofLog(OF_LOG_WARNING, "ofxControlPanel - paramater requested %s doesn't exist - returning 0", xmlName.c_str());
+    ofLog(OF_LOG_WARNING, "ofxControlPanel - parameter requested %s doesn't exist - returning 0", xmlName.c_str());
     return 0;
 }
 
@@ -401,7 +418,7 @@ float ofxControlPanel::getValueF(string xmlName, int whichParam){
             }
         }
     }
-    ofLog(OF_LOG_WARNING, "ofxControlPanel - paramater requested %s doesn't exist - returning 0", xmlName.c_str());
+    ofLog(OF_LOG_WARNING, "ofxControlPanel - parameter requested %s doesn't exist - returning 0", xmlName.c_str());
     return 0;
 }
 
@@ -414,7 +431,7 @@ int ofxControlPanel::getValueI(string xmlName, int whichParam){
             }
         }
     }
-    ofLog(OF_LOG_WARNING, "ofxControlPanel - paramater requested %s doesn't exist - returning 0", xmlName.c_str());
+    ofLog(OF_LOG_WARNING, "ofxControlPanel - parameter requested %s doesn't exist - returning 0", xmlName.c_str());
     return 0;
 }
 
@@ -426,8 +443,8 @@ int ofxControlPanel::getValueI(string xmlName, int whichParam){
 // ############################################################## //
 
 //-----------------------------
-void ofxControlPanel::setIncrementSave(string incrmentalFileBaseName){
-    incrementSaveName = incrmentalFileBaseName;
+void ofxControlPanel::setIncrementSave(string incrementalFileBaseName){
+    incrementSaveName = incrementalFileBaseName;
     incrementSave = true;
 }
 //-----------------------------
@@ -458,8 +475,9 @@ void ofxControlPanel::loadSettings(string xmlFile){
                 string str = xmlObjects[i].xmlName+":val_"+ofToString(j);
                 float val = settings.getValue(str, xmlObjects[i].guiObj->value.getValueF(j));
 
-                xmlObjects[i].guiObj->value.setValue(val, j);
+                xmlObjects[i].guiObj->setValue(val, j);
             }
+            xmlObjects[i].guiObj->updateValue();
         }
     }
 }
@@ -470,20 +488,27 @@ void ofxControlPanel::reloadSettings(){
 
     if( currentXmlFile != "" ){
 
-        settings.loadFile(currentXmlFile);
-        usingXml = true;
+        bool loadedOK = settings.loadFile(currentXmlFile);
+        if(loadedOK)
+        {
+            usingXml = true;
 
-        for(unsigned int i = 0; i < xmlObjects.size(); i++){
-            if( xmlObjects[i].guiObj != NULL ){
-                int numParams = xmlObjects[i].numParams;
+            for(unsigned int i = 0; i < xmlObjects.size(); i++){
+                if( xmlObjects[i].guiObj != NULL ){
+                    int numParams = xmlObjects[i].numParams;
 
-                for(int j = 0; j < numParams; j++){
-                    string str = xmlObjects[i].xmlName+":val_"+ofToString(j);
-                    float val = settings.getValue(str, xmlObjects[i].guiObj->value.getValueF(j));
+                    for(int j = 0; j < numParams; j++){
+                        string str = xmlObjects[i].xmlName+":val_"+ofToString(j);
+                        float val = settings.getValue(str, xmlObjects[i].guiObj->value.getValueF(j));
 
-                    xmlObjects[i].guiObj->value.setValue(val, j);
+                        xmlObjects[i].guiObj->setValue(val, j);
+                    }
+                    xmlObjects[i].guiObj->updateValue();
                 }
             }
+
+        } else {
+            ofLog(OF_LOG_ERROR,"Could not load %s.",currentXmlFile.c_str());
         }
 
     }
@@ -519,10 +544,15 @@ void ofxControlPanel::saveSettings(string xmlFile){
 
 //-----------------------------
 void ofxControlPanel::saveSettings(){
-    for(int i = 0; i < (int) guiObjects.size(); i++)guiObjects[i]->saveSettings();
+    for(int i = 0; i < (int) guiObjects.size(); i++)
+    {
+        guiObjects[i]->saveSettings();
+    }
 
-    for(int i = 0; i < (int) xmlObjects.size(); i++){
-        if( xmlObjects[i].guiObj != NULL ){
+    for(int i = 0; i < (int) xmlObjects.size(); i++)
+    {
+        if( xmlObjects[i].guiObj != NULL )
+        {
             int numParams = xmlObjects[i].numParams;
 
             for(int j = 0; j < numParams; j++){
@@ -755,11 +785,11 @@ void ofxControlPanel::draw(){
             ofRect(restoreButton.x, restoreButton.y, restoreButton.width,restoreButton.height);
             ofSetColor(255, 255, 255);
 		if(bUseTTFFont) {
-			guiTTFFont.drawString("restore", restoreButton.x + 3, restoreButton.y + restoreButton.height -4);			
+			guiTTFFont.drawString("restore", restoreButton.x + 3, restoreButton.y + restoreButton.height -4);
 		}
 		else {
 			ofDrawBitmapString("restore", restoreButton.x + 3, restoreButton.y + restoreButton.height -3);
-		}	
+		}
         ofPopStyle();
 
 
