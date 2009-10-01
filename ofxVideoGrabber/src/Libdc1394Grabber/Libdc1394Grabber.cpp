@@ -33,6 +33,7 @@ Libdc1394Grabber::Libdc1394Grabber()
 	packet_size = 0;
 
     bChooseDevice = false;
+	bSet1394bMode = false;
 	cameraUnit = -1;
 	cameraIndex = -1;
 	cameraGUID = 0;
@@ -77,7 +78,7 @@ bool Libdc1394Grabber::init( int _width, int _height, int _format, int _targetFo
 	if(_deviceString != "") {
         setDeviceID(_deviceString);
 	}
-
+	
     /* initialise camera */
     bool result = false;
 
@@ -90,9 +91,12 @@ bool Libdc1394Grabber::init( int _width, int _height, int _format, int _targetFo
         result = initCamera( _width, _height, desiredVideoMode, desiredFrameRate, (dc1394color_coding_t) 0);
     }
 
-    if(!result) return false;
-
-    initInternalBuffers();
+    if(!result) {
+		return false;
+	}
+	
+	initInternalBuffers();
+	
 	startThread(false, true);   // blocking, verbose
 
 	return true;
@@ -148,6 +152,10 @@ void Libdc1394Grabber::listDevices()
     ofLog(OF_LOG_NOTICE,"There were %d cameras found.", numCameras );
 }
 
+void Libdc1394Grabber::set1394bMode(bool mode) 
+{
+	bSet1394bMode = mode;
+}
 
 void Libdc1394Grabber::setDeviceID(int _deviceID){
 	cameraIndex	= _deviceID;
@@ -268,6 +276,16 @@ bool Libdc1394Grabber::initCamera( int _width, int _height, dc1394video_mode_t _
     }
 
 	ofLog(OF_LOG_NOTICE, "Using video device %i with GUID %llx",cameraIndex,camera->guid);
+	
+	/* Select camera transfer mode */
+    if ((camera->bmode_capable > 0) && (bSet1394bMode)) {
+        dc1394_video_set_operation_mode(camera, DC1394_OPERATION_MODE_1394B);
+        speed = DC1394_ISO_SPEED_800;
+        ofLog(OF_LOG_NOTICE,"1394B detected! Trying ISO Speed 800.");
+    } else {
+        speed = DC1394_ISO_SPEED_400;
+    }
+
 
 	/*-----------------------------------------------------------------------
 	*  Get video modes
@@ -312,13 +330,13 @@ bool Libdc1394Grabber::initCamera( int _width, int _height, dc1394video_mode_t _
 	}
 
 	ofLog(OF_LOG_NOTICE,"Chosen color coding: %s",Libdc1394GrabberUtils::print_color_coding(coding));
-	if(!bUseFormat7) {
-        uint32_t bits = 0;
-        dc1394_get_color_coding_data_depth(coding,&bits);
-        ofLog(OF_LOG_VERBOSE, "Color coding data depth: %i bits",bits);
-        dc1394_get_color_coding_bit_size(coding,&bits);
-        ofLog(OF_LOG_VERBOSE, "Color coding bit-space: %i bits",bits);
-	}
+
+	uint32_t bits = 0;
+	dc1394_get_color_coding_data_depth(coding,&bits);
+	ofLog(OF_LOG_VERBOSE, "Color coding data depth: %i bits",bits);
+	uint32_t bit_size;
+	dc1394_get_color_coding_bit_size(coding,&bit_size);
+	ofLog(OF_LOG_VERBOSE, "Color coding bit-space: %i bits",bit_size);
 
 	sourceFormatLibDC = coding;
 	sourceFormat = Libdc1394GrabberVideoFormatHelper::libcd1394ColorFormatToVidFormat(  coding );
@@ -332,10 +350,17 @@ bool Libdc1394Grabber::initCamera( int _width, int _height, dc1394video_mode_t _
         packet_size = DC1394_USE_MAX_AVAIL;
         if(ROI_height==0) ROI_height = _height;
         if(ROI_width==0)  ROI_width  = _width;
-        if(_frameRate!=-1){
-            float bus_period = 0.000125;
+        if(_frameRate!=-1) {
+            float bus_period;
+			if(speed == DC1394_ISO_SPEED_800) {
+				bus_period = 0.0000625;
+			}
+			else {
+				bus_period = 0.000125;
+			}
+				
             int num_packets = (int)(1.0/(bus_period*_frameRate)+0.5);
-            packet_size = ((ROI_width - ROI_x)*(ROI_height - ROI_y)*bpp + (num_packets*8) - 1) / (num_packets*8);
+            packet_size = ((ROI_width - ROI_x)*(ROI_height - ROI_y)*bit_size + (num_packets*8) - 1) / (num_packets*8);
         }
 	}
 	else {
@@ -366,20 +391,11 @@ bool Libdc1394Grabber::initCamera( int _width, int _height, dc1394video_mode_t _
 	*-----------------------------------------------------------------------*/
 	ofLog(OF_LOG_VERBOSE,"Setting up capture.");
 
-    /* Select maximum speed possible from the camera */
-    if (camera->bmode_capable > 0) {
-        dc1394_video_set_operation_mode(camera, DC1394_OPERATION_MODE_1394B);
-        speed = DC1394_ISO_SPEED_800;
-        ofLog(OF_LOG_NOTICE,"1394B detected! Selecting ISO Speed 800.");
-    } else {
-        speed = DC1394_ISO_SPEED_400;
-        ofLog(OF_LOG_NOTICE,"Selecting ISO Speed 400.");
-    }
-
+	ofLog(OF_LOG_NOTICE,"Setting ISO Speed %i",speed);
 	err = dc1394_video_set_iso_speed(camera, speed);
 	if(err!=DC1394_SUCCESS){
-	    ofLog( OF_LOG_ERROR, "Failed to set iso speed");
-        return false;
+		ofLog( OF_LOG_ERROR, "Failed to set iso speed");
+		return false;
 	}
 
 	ofLog(OF_LOG_NOTICE, "Setting video mode");
@@ -714,6 +730,11 @@ void Libdc1394Grabber::cleanupCamera()
 		if (dc1394_video_set_transmission(camera, DC1394_OFF)!=DC1394_SUCCESS) {
 			fprintf(stderr,"Could not stop ISO transmission\n");
 		}
+	}
+	
+	if(pixels) {
+		delete [] pixels;
+		pixels = NULL;
 	}
 
 	/* cleanup and exit */

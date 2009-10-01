@@ -42,6 +42,7 @@ class Libdc1394Grabber : public ofxVideoGrabberSDK, public ofxThread
         void setDiscardFrames(bool bDiscard);
         void setFormat7(bool format7);
 		void setROI(int x, int y, int width, int height);
+		void set1394bMode(bool mode); 
 
 		/* Features */
 		void initFeatures();
@@ -57,6 +58,7 @@ class Libdc1394Grabber : public ofxVideoGrabberSDK, public ofxThread
 		int stringToFeature( string _featureName );
 
         bool discardFrames;
+		bool bSet1394bMode;
 
 	private:
 
