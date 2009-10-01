@@ -11,21 +11,22 @@ void testApp::setup(){
 	mytimeThen		= 0.0f;
 
 	ofSetVerticalSync(true);
-	ofSetLogLevel(OF_LOG_VERBOSE);
+	ofSetLogLevel(OF_LOG_SILENT);
 
     //vidGrabber.setDeviceID("814436102632562");
     //vidGrabber.setDeviceID(0);
 
 
     Libdc1394Grabber *sdk = new Libdc1394Grabber;
-	sdk->setFormat7(false);
+	sdk->setFormat7(true);
 	sdk->listDevices();
 	sdk->setDiscardFrames(true);
+	sdk->set1394bMode(false);
 	//sdk->setROI(x,y,width,height);*/
 
 	//vidGrabber.setVerbose(true);
 
-    bool result = vidGrabber.initGrabber( camWidth, camHeight, VID_FORMAT_YUV422, VID_FORMAT_RGB, 30, true, sdk );
+    bool result = vidGrabber.initGrabber( camWidth, camHeight, VID_FORMAT_YUV422, VID_FORMAT_RGB, -1, true, sdk );
 
     //bool result = vidGrabber.initGrabber( camWidth, camHeight, VID_FORMAT_YUV422, VID_FORMAT_RGB, 30 );
 	// or like this:
