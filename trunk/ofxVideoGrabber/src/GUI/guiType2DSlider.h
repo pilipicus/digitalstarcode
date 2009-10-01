@@ -41,6 +41,19 @@ class guiType2DSlider : public guiBaseObject{
             knobSize = _knobSize;
         }
 
+        //-----------------------------------------------
+        virtual void setValue(float _value, int whichParam) {
+            value.setValue(_value, whichParam);
+        }
+
+        //-----------------------------------------------.
+        virtual void updateValue()
+        {
+            if(parameterCallback != NULL) {
+                parameterCallback->Execute(value.getValueF(0),value.getValueF(1), -1, callback_id);
+            }
+        }
+
         //-----------------------------------------------.
         void render(){
             ofPushStyle();

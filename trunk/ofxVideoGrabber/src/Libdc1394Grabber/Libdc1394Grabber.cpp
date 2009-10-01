@@ -3,9 +3,10 @@
 #include "Libdc1394GrabberFramerateHelper.h"
 #include "Libdc1394GrabberVideoFormatHelper.h"
 
+//#include <sstream>
 
-int Libdc1394Grabber::g_cameraIndex = -1;
-dc1394_t* Libdc1394Grabber::d = NULL;
+//int Libdc1394Grabber::g_cameraIndex = -1;
+dc1394_t* Libdc1394Grabber::dc1394 = NULL;
 
 Libdc1394Grabber::Libdc1394Grabber()
 {
@@ -21,8 +22,20 @@ Libdc1394Grabber::Libdc1394Grabber()
 
 	availableFeatureAmount = 0;
 
+	discardFrames = false;
+	numCameras = 0;
+
 	camera = NULL;
 	pixels = NULL;
+	cameraList = NULL;
+
+	ROI_x=0; ROI_y=0; ROI_width=0; ROI_height=0;
+	packet_size = 0;
+
+    bChooseDevice = false;
+	cameraUnit = -1;
+	cameraIndex = -1;
+	cameraGUID = 0;
 }
 
 Libdc1394Grabber::~Libdc1394Grabber()
@@ -48,25 +61,36 @@ void Libdc1394Grabber::close()
 
 	if (camera != NULL )
 	{
-		// Close camera
 		cleanupCamera();
 	}
 }
 
-bool Libdc1394Grabber::init( int _width, int _height, int _format, int _targetFormat, int _frameRate )
+bool Libdc1394Grabber::init( int _width, int _height, int _format, int _targetFormat, int _frameRate, bool _bVerbose, int _deviceID, string _deviceString )
 {
-
-    cout << "initialising:"  << endl;
-    cout << "width: " << _width << " height: " << _height << endl;
-    cout <<" format " << videoFormatToString(_format) << "  targetFormat: " << videoFormatToString(_targetFormat) << endl;
+    ofLog(OF_LOG_VERBOSE, "Input format: %s   TargetFormat: %s",videoFormatToString(_format).c_str(), videoFormatToString(_targetFormat).c_str());
 
 	targetFormat = _targetFormat;
 
-	dc1394framerate_t  desiredFrameRate = Libdc1394GrabberFramerateHelper::numToDcLibFramerate( _frameRate );
-	dc1394video_mode_t desiredVideoMode	= Libdc1394GrabberVideoFormatHelper::videoFormatFromParams( _width, _height, _format );
+	if(_deviceID != -1) {
+        setDeviceID(_deviceID);
+	}
+	if(_deviceString != "") {
+        setDeviceID(_deviceString);
+	}
 
-	bool result = initCam( desiredVideoMode, desiredFrameRate );
-	if(!result) return false;
+    /* initialise camera */
+    bool result = false;
+
+    if(bUseFormat7){
+        dc1394color_coding_t desiredColorCoding = Libdc1394GrabberVideoFormatHelper::colorCodingFormat7FromParams(_format);
+        result = initCamera( _width,_height, DC1394_VIDEO_MODE_FORMAT7_0, (dc1394framerate_t) _frameRate, desiredColorCoding);
+    }else{
+        dc1394video_mode_t desiredVideoMode	= Libdc1394GrabberVideoFormatHelper::videoFormatFromParams( _width, _height, _format );
+        dc1394framerate_t  desiredFrameRate = Libdc1394GrabberFramerateHelper::numToDcLibFramerate( _frameRate );
+        result = initCamera( _width, _height, desiredVideoMode, desiredFrameRate, (dc1394color_coding_t) 0);
+    }
+
+    if(!result) return false;
 
     initInternalBuffers();
 	startThread(false, true);   // blocking, verbose
@@ -74,58 +98,180 @@ bool Libdc1394Grabber::init( int _width, int _height, int _format, int _targetFo
 	return true;
 }
 
-bool Libdc1394Grabber::initCam( dc1394video_mode_t _videoMode, dc1394framerate_t _frameRate )
+bool Libdc1394Grabber::initDc1394System()
 {
-
-    dc1394error_t err;
-	dc1394camera_t **cameras = NULL;
-	uint32_t numCameras, i;
-	dc1394camera_list_t * list;
-
     /* Initialise libdc1394 */
-    if(!d) {
-        d = dc1394_new ();
+    if(!dc1394) {
+        dc1394 = dc1394_new ();
     }
-    if (!d) {
+    if (!dc1394) {
         ofLog(OF_LOG_FATAL_ERROR,"Failed to initialise libdc1394.");
         return false;
     }
 
-    /* Find cameras */
-	err=dc1394_camera_enumerate (d, &list);
-    DC1394_ERR_RTN(err,"Failed to enumerate cameras");
+    return true;
+}
+
+void Libdc1394Grabber::enumerateDevices()
+{
+    dc1394error_t err;
+
+    if(!dc1394) {
+        initDc1394System();
+    }
+
+    /* List cameras */
+    if(cameraList == NULL) {
+        err=dc1394_camera_enumerate (dc1394, &cameraList);
+        DC1394_WRN(err,"Failed to enumerate cameras");
+        if(err == DC1394_SUCCESS) {
+            numCameras = cameraList->num;
+        }
+    }
+}
+
+void Libdc1394Grabber::listDevices()
+{
+    enumerateDevices();
 
     /* Verify that we have at least one camera */
-    if (list->num == 0) {
-		dc1394_log_error("No cameras found!");
-		ofLog(OF_LOG_FATAL_ERROR, "No cameras found!");
+    if (cameraList->num > 0) {
+        ofLog(OF_LOG_NOTICE, "Listing available capture devices:");
+        ofLog(OF_LOG_NOTICE,"(Use GUID as unique ID for camera)");
+        ofLog(OF_LOG_NOTICE, "-------------------------------------------------------");
+        for (uint32_t index = 0; index < cameraList->num; index++) {
+            ofLog(OF_LOG_NOTICE, "Video device %d:  GUID = %llx , Unit = %x ", index, cameraList->ids[index].guid, cameraList->ids[index].unit);
+        }
+        ofLog(OF_LOG_NOTICE, "-------------------------------------------------------");
+    }
+
+    ofLog(OF_LOG_NOTICE,"There were %d cameras found.", numCameras );
+}
+
+
+void Libdc1394Grabber::setDeviceID(int _deviceID){
+	cameraIndex	= _deviceID;
+	ofLog(OF_LOG_NOTICE, "Trying to use Camera with Index %u",cameraIndex);
+	bChooseDevice	= true;
+}
+
+void Libdc1394Grabber::setDeviceID(string _deviceGUID)
+{
+
+    /* find camera unit  if present*/
+    size_t pos = _deviceGUID.find(":");
+    unsigned int len = _deviceGUID.length();
+
+    if (pos == len - 2) {
+
+        string unit = _deviceGUID.substr(len-1,1);
+        std::istringstream ss(unit);
+        ss >> cameraUnit;
+
+        _deviceGUID = _deviceGUID.substr(0,len-2);
+    }
+
+    /* get camera GUID */
+    std::istringstream ss( _deviceGUID );
+    ss >> hex >> cameraGUID;
+
+	ofLog(OF_LOG_NOTICE, "Trying to use Camera with GUID %llu, unit %i",cameraGUID, cameraUnit);
+	bChooseDevice = true;
+}
+
+bool Libdc1394Grabber::initCamera( int _width, int _height, dc1394video_mode_t _videoMode, dc1394framerate_t _frameRate, dc1394color_coding_t _coding )
+{
+    dc1394error_t err;
+
+    if(!initDc1394System()) {
         return false;
     }
 
-	numCameras = list->num;
+    if(!cameraList) {
+        enumerateDevices();
+    }
 
-/*
-	if (err!=DC1394_SUCCESS && err != DC1394_NO_CAMERA)
-	{
-		fprintf( stderr, "Unable to look for cameras\n\n"  "On Linux, please check \n" "  - if the kernel modules `ieee1394',`raw1394' and `ohci1394' are loaded \n" "  - if you have read/write access to /dev/raw1394\n\n");
-		//exit(1);
+    if(numCameras == 0) {
+        return false;
+    }
+
+	/*-----------------------------------------------------------------------
+	*  Select camera
+	*-----------------------------------------------------------------------*/
+    if( bChooseDevice ) {
+		if(cameraGUID != 0){
+
+			bool bFound = false;
+			for (uint32_t index = 0; index < cameraList->num; index++) {
+				if (cameraList->ids[index].guid == cameraGUID) {
+				    if(cameraUnit != -1) {
+				        if(cameraUnit == cameraList->ids[index].unit) {
+                            bFound = true;
+                            cameraIndex = index;
+                            ofLog(OF_LOG_NOTICE, "Found video device %i with GUID %llx, Unit %i",cameraIndex, cameraGUID, cameraUnit);
+                            break;
+				        }
+				    } else {
+                        bFound = true;
+                        cameraIndex = index;
+                        cameraUnit = cameraList->ids[index].unit;
+                        ofLog(OF_LOG_NOTICE, "Found video device %i with GUID %llx",cameraIndex, cameraGUID);
+                        break;
+				    }
+
+				}
+			}
+
+			if (!bFound) {
+				ofLog(OF_LOG_WARNING,"Device Index for unit %u not found, using first device\n", cameraGUID);
+				cameraUnit = -1;
+				cameraGUID = cameraList->ids[0].guid;
+			}
+		}
+		else if(cameraIndex != -1){
+			bool bFound = false;
+
+			for (uint32_t index = 0; index < cameraList->num; index++) {
+				if ((int) index == cameraIndex) {
+					bFound = true;
+					cameraGUID = cameraList->ids[index].guid;
+					ofLog(OF_LOG_NOTICE, "Found video device %i, it has GUID %llx", cameraIndex, cameraGUID);
+					break;
+				}
+			}
+			if (!bFound) {
+				ofLog(OF_LOG_WARNING,"Video device %i not found, using first device\n", cameraIndex);
+				cameraIndex = 0;
+				cameraUnit = -1;
+			}
+		}
+	} else if(cameraList->num > 0) {
+        cameraGUID = cameraList->ids[0].guid;
+        cameraIndex = 0;
+    } else {
+        ofLog(OF_LOG_ERROR, "No cameras found");
+    }
+
+	/*-----------------------------------------------------------------------
+	*  Initialise camera
+	*-----------------------------------------------------------------------*/
+	if(cameraUnit == -1) {
+        camera = dc1394_camera_new(dc1394, cameraGUID);
 	}
-*/
+    else {
+        camera = dc1394_camera_new_unit(dc1394, cameraGUID, cameraUnit);
+    }
 
-	ofLog(OF_LOG_NOTICE,"There were %d cameras found attached to your PC\n", numCameras );
-
-    /* Use first camera */
-	camera = dc1394_camera_new (d, list->ids[++g_cameraIndex].guid);
     if (!camera) {
-        dc1394_log_error("Failed to initialize camera with guid %llx", list->ids[0].guid);
+        dc1394_log_error("Failed to initialize camera with GUID %llx", cameraGUID);
         return false;
     }
-    dc1394_camera_free_list (list);
-	free(cameras);
 
-	ofLog(OF_LOG_NOTICE, "Using Camera with GUID %u",camera->guid);
+	ofLog(OF_LOG_NOTICE, "Using video device %i with GUID %llx",cameraIndex,camera->guid);
 
-	/* Get video modes */
+	/*-----------------------------------------------------------------------
+	*  Get video modes
+	*-----------------------------------------------------------------------*/
 	if (dc1394_video_get_supported_modes(camera,&video_modes) != DC1394_SUCCESS)
 	{
 	    ofLog(OF_LOG_FATAL_ERROR, "Can't get video modes");
@@ -133,159 +279,222 @@ bool Libdc1394Grabber::initCam( dc1394video_mode_t _videoMode, dc1394framerate_t
 	    return false;
     }
 
-	ofLog(OF_LOG_NOTICE, "Listing Modes");
-	for(i = 0; i < video_modes.num; i++ )
-	{
-	    dc1394video_mode_t mode = video_modes.modes[i];
-	    Libdc1394GrabberUtils::print_mode_info( camera , mode );
+    if(bVerbose) {
+        ofLog(OF_LOG_VERBOSE, "Listing Modes");
+        for(unsigned int i = 0; i < video_modes.num; i++ )
+        {
+            dc1394video_mode_t mode = video_modes.modes[i];
+            Libdc1394GrabberUtils::print_mode_info( camera , mode );
+        }
     }
 
-	/* Search the list for our preferred video mode */
+    /* Search the list for our preferred video mode */
 	bool foundVideoMode = false;
-  	for (i=video_modes.num-1;i>=0;i--)
-	{
-		if( video_modes.modes[i] == _videoMode )
-		{
-		    foundVideoMode = true;
+    for (int i = video_modes.num-1; i>=0; i--)
+    {
+        if( video_modes.modes[i] == _videoMode )
+        {
+            foundVideoMode = true;
             break;
-		}
+        }
+    }
+    video_mode = _videoMode;
+
+
+	/*-----------------------------------------------------------------------
+	*  Get color coding
+	*-----------------------------------------------------------------------*/
+	if(bUseFormat7) {
+        coding = _coding;
+	}
+	else {
+        dc1394_get_color_coding_from_video_mode(camera, video_mode, &coding);
 	}
 
-	video_mode = _videoMode;
-	cout << "Video Mode = " << video_mode << endl;
-
-	dc1394_get_color_coding_from_video_mode(camera, video_mode, &coding);
-	unsigned int source_bpp;
-	dc1394_get_color_coding_bit_size(coding,&source_bpp);
-	cout << "Source bpp = " << source_bpp  << endl;
-
-	//if ((dc1394_is_video_mode_scalable(video_modes.modes[i]))|| (coding!=DC1394_COLOR_CODING_MONO8))
-	//{ fprintf(stderr,"Could not get a valid MONO8 mode\n"); cleanupCamera(); }
-
-	cout << endl << "**** Chosen Color coding ****" << endl;
-	Libdc1394GrabberUtils::print_color_coding( coding );
-	cout << endl << "*****************************" << endl << endl;
+	ofLog(OF_LOG_NOTICE,"Chosen color coding: %s",Libdc1394GrabberUtils::print_color_coding(coding));
+	if(!bUseFormat7) {
+        uint32_t bits = 0;
+        dc1394_get_color_coding_data_depth(coding,&bits);
+        ofLog(OF_LOG_VERBOSE, "Color coding data depth: %i bits",bits);
+        dc1394_get_color_coding_bit_size(coding,&bits);
+        ofLog(OF_LOG_VERBOSE, "Color coding bit-space: %i bits",bits);
+	}
 
 	sourceFormatLibDC = coding;
 	sourceFormat = Libdc1394GrabberVideoFormatHelper::libcd1394ColorFormatToVidFormat(  coding );
 
 
-    cout << endl << "**** get color codings:" << endl;
-    dc1394color_codings_t color_modes;
-    err = dc1394_format7_get_color_codings(camera, video_mode, &color_modes);
+	/*-----------------------------------------------------------------------
+	*  Get framerate / packet size
+	*-----------------------------------------------------------------------*/
 
-    if(err == DC1394_SUCCESS) {
-        for (i=color_modes.num-1;i>=0;i--)
-        {
-            cout << i << " -> " << color_modes.codings[i] << endl;
+	if(bUseFormat7) {
+        packet_size = DC1394_USE_MAX_AVAIL;
+        if(ROI_height==0) ROI_height = _height;
+        if(ROI_width==0)  ROI_width  = _width;
+        if(_frameRate!=-1){
+            float bus_period = 0.000125;
+            int num_packets = (int)(1.0/(bus_period*_frameRate)+0.5);
+            packet_size = ((ROI_width - ROI_x)*(ROI_height - ROI_y)*bpp + (num_packets*8) - 1) / (num_packets*8);
         }
-    } else {
-        cout << "could not get color codings..." << endl;
-
-    }
-
-	cout << "*******" << endl;
-
-	// get framerates
-	if (dc1394_video_get_supported_framerates(camera,video_mode,&framerates)!=DC1394_SUCCESS)
-	{
-		fprintf(stderr,"Can't get framerates\n");
-		cleanupCamera();
 	}
+	else {
+        if (dc1394_video_get_supported_framerates(camera,video_mode,&framerates) != DC1394_SUCCESS)
+        {
+            ofLog(OF_LOG_FATAL_ERROR, "Can't get framerates");
+            cleanupCamera();
+        }
 
-	// search the list for our preferred framerate
-	bool foundFramerate = false;
-	for( i = 0; i < framerates.num; i++ )
-	{
-		if( framerates.framerates[i] == _frameRate )
-		{
-			framerate = framerates.framerates[i];
-			foundFramerate = true;
-			break;
-		}
+        // search the list for our preferred framerate
+        bool foundFramerate = false;
+        for(unsigned int i = 0; i < framerates.num; i++ )
+        {
+            if( framerates.framerates[i] == _frameRate )
+            {
+                framerate = framerates.framerates[i];
+                foundFramerate = true;
+                break;
+            }
+        }
+
+        // if we didn't find it, select the highest one.
+        if( !foundFramerate ) framerate=framerates.framerates[framerates.num-1];
 	}
-
-	// if we didn't find it, select the highest one.
-	if( !foundFramerate ) framerate=framerates.framerates[framerates.num-1];
 
 	/*-----------------------------------------------------------------------
-	*  setup capture
+	*  Setup capture
 	*-----------------------------------------------------------------------*/
-	fprintf(stderr,"Setting capture\n");
-	dc1394_video_set_iso_speed(camera, DC1394_ISO_SPEED_400);
+	ofLog(OF_LOG_VERBOSE,"Setting up capture.");
 
-	dc1394_video_set_mode(camera, video_mode);
-	dc1394_video_set_framerate(camera, framerate);
+    /* Select maximum speed possible from the camera */
+    if (camera->bmode_capable > 0) {
+        dc1394_video_set_operation_mode(camera, DC1394_OPERATION_MODE_1394B);
+        speed = DC1394_ISO_SPEED_800;
+        ofLog(OF_LOG_NOTICE,"1394B detected! Selecting ISO Speed 800.");
+    } else {
+        speed = DC1394_ISO_SPEED_400;
+        ofLog(OF_LOG_NOTICE,"Selecting ISO Speed 400.");
+    }
+
+	err = dc1394_video_set_iso_speed(camera, speed);
+	if(err!=DC1394_SUCCESS){
+	    ofLog( OF_LOG_ERROR, "Failed to set iso speed");
+        return false;
+	}
+
+	ofLog(OF_LOG_NOTICE, "Setting video mode");
+	err = dc1394_video_set_mode(camera, video_mode);
+	if(err!=DC1394_SUCCESS){
+	    ofLog( OF_LOG_ERROR, "Failed to set video mode");
+        return false;
+	}
+
+    if(bUseFormat7) {
+        ofLog(OF_LOG_NOTICE, "Setting color coding");
+        err = dc1394_format7_set_color_coding(camera, video_mode, coding);
+        if(err!=DC1394_SUCCESS){
+            ofLog( OF_LOG_ERROR, "Failed to set color coding");
+            return false;
+        }
+
+        ofLog(OF_LOG_NOTICE, "Setting framerate / packet size");
+        err = dc1394_format7_set_packet_size(camera, video_mode, packet_size);
+        if(err!=DC1394_SUCCESS){
+            ofLog( OF_LOG_ERROR, "Failed to set framerate / packet size");
+            return false;
+        }
+
+        ofLog(OF_LOG_NOTICE, "Setting ROI");
+        err = dc1394_format7_set_roi(camera, video_mode, coding, packet_size, ROI_x,ROI_y,ROI_width,ROI_height);
+        if(err!=DC1394_SUCCESS){
+            ofLog( OF_LOG_ERROR, "Failed to set ROI");
+            return false;
+        }
+    } else {
+        dc1394_video_set_framerate(camera, framerate);
+    }
+
+
 
 	if (dc1394_capture_setup(camera,4,DC1394_CAPTURE_FLAGS_DEFAULT)!=DC1394_SUCCESS)
 	{
-		fprintf( stderr,"Unable to setup camera!\n - check that the video mode and framerate are supported by your camera\n");
+		ofLog(OF_LOG_FATAL_ERROR,"Unable to setup camera!\n\t - check that the video mode and framerate are supported by your camera.");
 		cleanupCamera();
 		return false;
 	}
 
-	cout << "chosen video format: "; Libdc1394GrabberUtils::print_format( video_mode ); cout << endl;
-	cout << "chosen frame rate: " << Libdc1394GrabberFramerateHelper::DcLibFramerateToString( framerate ) << endl;
-
-/*
-	// report camera's features ----------------------------------
-	if (dc1394_get_camera_feature_set(camera,&features) !=DC1394_SUCCESS)  { fprintf( stderr, "unable to get feature set\n"); }
-	else  { dc1394_print_feature_set(&features); }
-*/
+	ofLog(OF_LOG_NOTICE,"Chosen video format\t: %s",Libdc1394GrabberUtils::print_format( video_mode ));
+	if(!bUseFormat7) {
+        ofLog(OF_LOG_NOTICE,"Chosen frame rate\t: %s",Libdc1394GrabberFramerateHelper::DcLibFramerateToString(framerate));
+	}
 
 
-	fprintf(stderr,"start transmission\n");
 	/*-----------------------------------------------------------------------
-	*  have the camera start sending us data
+	*  Start camera sending data
 	*-----------------------------------------------------------------------*/
 	if (dc1394_video_set_transmission(camera, DC1394_ON) !=DC1394_SUCCESS)
 	{
-		fprintf( stderr, "unable to start camera iso transmission\n");
+		ofLog(OF_LOG_FATAL_ERROR, "Unable to start camera iso transmission");
 		cleanupCamera();
 	}
 
-	fprintf(stderr,"wait transmission\n");
+
 	/*-----------------------------------------------------------------------
 	*  Sleep until the camera has a transmission
 	*-----------------------------------------------------------------------*/
 	dc1394switch_t status = DC1394_OFF;
 
-	i = 0;
-	while( status == DC1394_OFF && i++ < 5 )
+	int counter = 0;
+	while( status == DC1394_OFF && counter++ < 5 )
 	{
 		usleep(50000);
 		if (dc1394_video_get_transmission(camera, &status)!=DC1394_SUCCESS)
 		{
-			fprintf(stderr, "unable to get transmission status\n");
+			ofLog(OF_LOG_FATAL_ERROR,"Unable to get transmission status.");
 			cleanupCamera();
 		}
 	}
 
-	if( i == 5 )
+	if( counter == 5 )
 	{
-		fprintf(stderr,"Camera doesn't seem to want to turn on!\n");
+		ofLog(OF_LOG_FATAL_ERROR,"Camera doesn't seem to want to turn on!");
 		cleanupCamera();
 	}
 
-
-    dc1394_get_image_size_from_video_mode(camera, video_mode, &width, &height);
+    if(bUseFormat7) {
+        dc1394_format7_get_image_size(camera, video_mode, &width, &height);
+    }
+    else {
+        dc1394_get_image_size_from_video_mode(camera, video_mode, &width, &height);
+    }
     outputImageWidth = width;
     outputImageHeight = height;
 
+	/*-----------------------------------------------------------------------
+	*  Initialized and list features
+	*-----------------------------------------------------------------------*/
 	initFeatures();
-
-	fprintf(stderr,"capture\n");
 
 	return true;
 }
 
+void Libdc1394Grabber::setFormat7(bool _format7){
+    bUseFormat7 = _format7;
+}
+
+void Libdc1394Grabber::setROI(int x, int y, int width, int height){
+    ROI_x=x; ROI_y=y; ROI_width=width; ROI_height=height;
+}
 
 void Libdc1394Grabber::initInternalBuffers()
 {
-
-	if( targetFormat == VID_FORMAT_GREYSCALE || targetFormat == VID_FORMAT_Y8 ) { bpp = VID_BPP_GREY; }
-	else if( targetFormat == VID_FORMAT_RGB || targetFormat == VID_FORMAT_BGR ) { bpp = VID_BPP_RGB; }
-	else{ cout << "**** " << endl << "*** Libdc1394Grabber: Unsupported output format! *** " << endl << "***************************************** " << endl; }
+	if( targetFormat == VID_FORMAT_GREYSCALE || targetFormat == VID_FORMAT_Y8 )
+        { bpp = VID_BPP_GREY; }
+	else if( targetFormat == VID_FORMAT_RGB || targetFormat == VID_FORMAT_BGR )
+        { bpp = VID_BPP_RGB; }
+	else {
+	    ofLog(OF_LOG_ERROR, " *** Libdc1394Grabber: Unsupported output format! ***");
+    }
 
 	finalImageDataBufferLength = width*height*bpp;
 	pixels = new unsigned char[finalImageDataBufferLength];
@@ -325,6 +534,28 @@ void Libdc1394Grabber::captureFrame()
 
 	if( !bHasNewFrame && (camera != NULL ))
 	{
+	    if(discardFrames)
+	    {
+            /*---------------------------------------------------------------------------
+             *  make sure DMA buffer is fresh by dropping frames if we're lagging behind
+             *--------------------------------------------------------------------------*/
+
+            bool bufferEmpty = false;
+            dc1394video_frame_t* frameToDiscard;
+            while (!bufferEmpty){
+                if (dc1394_capture_dequeue(camera, DC1394_CAPTURE_POLICY_POLL, &frameToDiscard) == DC1394_SUCCESS){
+                    if(frameToDiscard != NULL){
+                        dc1394_capture_enqueue(camera, frameToDiscard);
+                        ofLog(OF_LOG_WARNING, "discarded a frame");
+                    } else {
+                        bufferEmpty = true;
+                    }
+                } else {
+                    bufferEmpty = true;
+                }
+            }
+	    }
+
 		/*-----------------------------------------------------------------------
 		*  capture one frame
 		*-----------------------------------------------------------------------*/
@@ -486,19 +717,23 @@ void Libdc1394Grabber::cleanupCamera()
 	}
 
 	/* cleanup and exit */
+    dc1394_camera_free_list (cameraList);
 	dc1394_capture_stop(camera);
 	dc1394_camera_free (camera);
 	camera = NULL;
 
-	if(d) {
-		dc1394_free (d);
-		d = NULL;
+	if(dc1394) {
+		dc1394_free (dc1394);
+		dc1394 = NULL;
 	}
 
 }
 
 
-
+void Libdc1394Grabber::setDiscardFrames(bool bDiscard)
+{
+    discardFrames = bDiscard;
+}
 
 /*-----------------------------------------------------------------------
  *  Feature Methods
@@ -511,11 +746,10 @@ void Libdc1394Grabber::initFeatures()
 	// get camera features ----------------------------------
 	if ( dc1394_feature_get_all(camera,&tmpFeatureSet) !=DC1394_SUCCESS)
 	{
-        fprintf( stderr, "unable to get feature set\n");
+        ofLog(OF_LOG_ERROR, "Unable to get camera feature set.");
     }
 	else
 	{
-		//dc1394_print_feature_set(&tmpFeatureSet);
 
 		int tmpAvailableFeatures = 0;
 		for( int i = 0; i < TOTAL_CAMERA_FEATURES; i++ )
@@ -529,7 +763,10 @@ void Libdc1394Grabber::initFeatures()
 
 		tmpAvailableFeatures = 0;
 
-        cout << "Name\t" << "\tAbs." << "\tCurr." << "\tCurr2."  << "\tMin." << "\tMax." << endl;
+        if(bVerbose) {
+            cout << "------------------------------------------------------------" << endl;
+            cout << "Feature Name\tAbs.\tCurr.\tCurr2.\tMin.\tMax." << endl;
+        }
 		for( int i = 0; i < TOTAL_CAMERA_FEATURES; i++ )
 		{
 			if(tmpFeatureSet.feature[i].available)
@@ -603,24 +840,30 @@ void Libdc1394Grabber::initFeatures()
                     }
 				}
 
-				cout << setw(13) << featureVals[tmpAvailableFeatures].name
-				<< " :\t" << featureVals[tmpAvailableFeatures].hasAbsoluteMode
-				<< "\t" << featureVals[tmpAvailableFeatures].currVal;
+                if(bVerbose) {
+                    /* print out feature values */
+                    cout << setw(13) << featureVals[tmpAvailableFeatures].name
+                    << " :\t" << featureVals[tmpAvailableFeatures].hasAbsoluteMode
+                    << "\t" << featureVals[tmpAvailableFeatures].currVal;
 
-				if(tmpFeatureSet.feature[i].id == DC1394_FEATURE_WHITE_BALANCE)
-				{
-				    cout << "\t" << featureVals[tmpAvailableFeatures].currVal2;
-                }
-                else
-                {
-                    cout << "\t";
-                }
+                    if(tmpFeatureSet.feature[i].id == DC1394_FEATURE_WHITE_BALANCE)
+                    {
+                        cout << "\t" << featureVals[tmpAvailableFeatures].currVal2;
+                    }
+                    else
+                    {
+                        cout << "\t";
+                    }
 
-				cout << "\t" << featureVals[tmpAvailableFeatures].minVal
-				<< "\t" << featureVals[tmpAvailableFeatures].maxVal << endl;
+                    cout << "\t" << featureVals[tmpAvailableFeatures].minVal
+                    << "\t" << featureVals[tmpAvailableFeatures].maxVal << endl;
+                }
 
 				tmpAvailableFeatures++;
 			}
+		}
+		if(bVerbose) {
+            cout << "------------------------------------------------------------" << endl;
 		}
 
 	}

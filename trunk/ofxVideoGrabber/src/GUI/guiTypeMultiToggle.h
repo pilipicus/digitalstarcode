@@ -38,6 +38,14 @@ class guiTypeMultiToggle : public guiBaseObject{
 
         }
 
+        //-----------------------------------------------
+        virtual void updateValue()
+        {
+            if(parameterCallback != NULL) {
+                parameterCallback->Execute(-1, -1, value.getValueI(), callback_id);
+            }
+        }
+
         //-----------------------------------------------.
         void updateGui(float x, float y, bool firstHit, bool isRelative){
             if(!firstHit)return;
@@ -52,6 +60,10 @@ class guiTypeMultiToggle : public guiBaseObject{
                         value.setValue(i, 0);
                         break;
                     }
+                }
+
+                if(parameterCallback != NULL) {
+                    parameterCallback->Execute(-1, -1, value.getValueI(), callback_id);
                 }
             }
 

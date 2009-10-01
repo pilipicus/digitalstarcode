@@ -7,13 +7,22 @@ class ofxVideoGrabberSDK
 {
 	public:
 
-        ofxVideoGrabberSDK() {bHasNewFrame = false;};
+        ofxVideoGrabberSDK() {bHasNewFrame = false;bVerbose = false;};
 		virtual ~ofxVideoGrabberSDK() {};
 
-		virtual bool init( int _width = 320, int _height = 240, int _format = VID_FORMAT_RGB, int _targetFormat = VID_FORMAT_RGB , int _frameRate = 15 ) = 0;
+		virtual bool init(
+            int _width = 320,
+            int _height = 240,
+            int _format = VID_FORMAT_RGB,
+            int _targetFormat = VID_FORMAT_RGB ,
+            int _frameRate = 15,
+            bool _bVerbose = false,
+            int deviceID = -1,
+            string deviceString = "" ) = 0;
 		virtual void close() = 0;
 		virtual unsigned char* getPixels() = 0;
 		virtual bool grabFrame(unsigned char ** _pixels) = 0;
+		virtual void listDevices() = 0;
 
         /* camera settings */
 		virtual void setFeaturesOnePushMode() = 0;
@@ -24,6 +33,10 @@ class ofxVideoGrabberSDK
 		virtual void setFeatureAbsoluteValue( float _val, int _feature ) = 0;
 		virtual void setFeatureValue( float _val, int _feature ) = 0;
         virtual void setFeatureValue( float _val1, float _val2, int _feature) = 0;
+        virtual void setDeviceID(int _deviceID) = 0;
+
+        virtual void setDeviceID(string _deviceIDString) { ofLog(OF_LOG_WARNING,"setDeviceID(string _deviceIDString) not implemented.\n Override this function.");}
+
 
 		unsigned int width;
 		unsigned int height;
@@ -31,12 +44,17 @@ class ofxVideoGrabberSDK
 
         int availableFeatureAmount;
 		ofxVideoGrabberFeature* featureVals;
+		bool bVerbose;
 
     protected:
         bool bHasNewFrame;
 		unsigned char* pixels;
 		int sourceFormat;
 		int targetFormat;
+		string deviceString;
+		unsigned long deviceID;
+		int cameraIndex;
+
 
 };
 

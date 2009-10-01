@@ -16,6 +16,14 @@ class guiTypeToggle : public guiBaseObject{
             name = toggleName;
         }
 
+        //-----------------------------------------------
+        virtual void updateValue()
+        {
+            if(parameterCallback != NULL) {
+                parameterCallback->Execute(-1, -1, value.getValueI(), callback_id);
+            }
+        }
+
         //-----------------------------------------------.
         void updateGui(float x, float y, bool firstHit, bool isRelative){
             if(!firstHit)return;
@@ -25,6 +33,10 @@ class guiTypeToggle : public guiBaseObject{
                     value.setValue(1, 0);
                 }else{
                     value.setValue(0, 0);
+                }
+
+                if(parameterCallback != NULL) {
+                    parameterCallback->Execute(-1,-1, value.getValueI(), callback_id);
                 }
             }
         }

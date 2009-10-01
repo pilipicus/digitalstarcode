@@ -26,18 +26,19 @@ class ofxVideoGrabber: public ofBaseVideo
 				  int _targetFormat = VID_FORMAT_RGB,
 				  int _frameRate = 15,
 				  bool _useTexture = true,
-				  ofxVideoGrabberSDK* sdk = new Libdc1394Grabber,
+				  ofxVideoGrabberSDK* sdk = NULL,
 				  ofxVideoGrabberSettings* settings = new ofxIIDCSettings);
 
-		//void 			listDevices();      TODO
+		void 			listDevices();
 		bool            isFrameNew();
 		void            grabFrame();
         void            close();
 		void			videoSettings() {settings->toggleSettingsGUI();};
 		unsigned char*  getPixels();
 		ofTexture &     getTextureReference();
-		//void 			setVerbose(bool bTalkToMe); TODO
-		//void			setDeviceID(int _deviceID); TODO
+		void 			setVerbose(bool bTalkToMe);
+		void			setDeviceID(int _deviceID);
+		void			setDeviceID(string _deviceID);
 		void            setUseTexture(bool bUse);
 		void            draw(float x, float y);
 		void            draw(float x, float y, float w, float h);
@@ -46,14 +47,16 @@ class ofxVideoGrabber: public ofBaseVideo
 		float 		    getWidth();
 
 
-        ofxVideoGrabberSDK *        videoGrabber;
+
         ofxVideoGrabberSettings *   settings;
 
 
 	protected:
+        ofxVideoGrabberSDK *        videoGrabber;
 
         bool bGrabberInited;
         bool bUseTexture;
+        bool bVerbose;
         ofTexture tex;
         bool bIsFrameNew;
         int width;
@@ -61,6 +64,8 @@ class ofxVideoGrabber: public ofBaseVideo
         unsigned int bpp;
         unsigned char* pixels;
         int targetFormat;
+        int deviceID;
+        string deviceString;
 
 };
 

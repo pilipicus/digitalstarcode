@@ -5,7 +5,8 @@
 #include "guiIncludes.h"
 
 
-class xmlAssociation{
+class xmlAssociation
+{
     public:
         xmlAssociation(guiBaseObject * objPtr, string xmlNameIn, int numParamsIn){
             guiObj      = objPtr;
@@ -40,8 +41,8 @@ class ofxControlPanel: public guiBaseObject{
 
         void setSliderWidth(int width);
 
-        guiTypeToggle * addToggle(string name, string xmlName, bool defaultValue);
-        guiTypeMultiToggle * addMultiToggle(string name, string xmlName, int defaultBox, vector <string> boxNames);
+        guiTypeToggle * addToggle(string name, string xmlName, bool defaultValue, BaseCallback* pCallback, int _callback_id);
+        guiTypeMultiToggle * addMultiToggle(string name, string xmlName, int defaultBox, vector <string> boxNames, BaseCallback* pCallback, int _callback_id);
         guiTypeSlider * addSlider(string sliderName, string xmlName, float value , float min, float max, bool isInt, BaseCallback* pCallback, int param_id);
         guiType2DSlider * addSlider2D(string sliderName, string xmlName, float valueX, float valueY, float minX, float maxX, float minY, float maxY, bool isInt,BaseCallback* pCallback, int param_id);
         guiTypeDrawable * addDrawableRect(string name, ofBaseDraws * drawablePtr, int drawW, int drawH);
