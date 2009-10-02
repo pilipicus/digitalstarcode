@@ -78,7 +78,7 @@ bool Libdc1394Grabber::init( int _width, int _height, int _format, int _targetFo
 	if(_deviceString != "") {
         setDeviceID(_deviceString);
 	}
-	
+
     /* initialise camera */
     bool result = false;
 
@@ -94,10 +94,11 @@ bool Libdc1394Grabber::init( int _width, int _height, int _format, int _targetFo
     if(!result) {
 		return false;
 	}
-	
+
 	initInternalBuffers();
-	
-	startThread(false, true);   // blocking, verbose
+
+	startThread(false, false);   // blocking, verbose
+	//startThread(true, false);
 
 	return true;
 }
@@ -152,7 +153,7 @@ void Libdc1394Grabber::listDevices()
     ofLog(OF_LOG_NOTICE,"There were %d cameras found.", numCameras );
 }
 
-void Libdc1394Grabber::set1394bMode(bool mode) 
+void Libdc1394Grabber::set1394bMode(bool mode)
 {
 	bSet1394bMode = mode;
 }
@@ -276,7 +277,7 @@ bool Libdc1394Grabber::initCamera( int _width, int _height, dc1394video_mode_t _
     }
 
 	ofLog(OF_LOG_NOTICE, "Using video device %i with GUID %llx",cameraIndex,camera->guid);
-	
+
 	/* Select camera transfer mode */
     if ((camera->bmode_capable > 0) && (bSet1394bMode)) {
         dc1394_video_set_operation_mode(camera, DC1394_OPERATION_MODE_1394B);
@@ -358,7 +359,7 @@ bool Libdc1394Grabber::initCamera( int _width, int _height, dc1394video_mode_t _
 			else {
 				bus_period = 0.000125;
 			}
-				
+
             int num_packets = (int)(1.0/(bus_period*_frameRate)+0.5);
             packet_size = ((ROI_width - ROI_x)*(ROI_height - ROI_y)*bit_size + (num_packets*8) - 1) / (num_packets*8);
         }
@@ -406,10 +407,10 @@ bool Libdc1394Grabber::initCamera( int _width, int _height, dc1394video_mode_t _
 	}
 
     if(bUseFormat7) {
-        ofLog(OF_LOG_NOTICE, "Setting color coding");
+        ofLog(OF_LOG_NOTICE, "Setting Format 7 color coding");
         err = dc1394_format7_set_color_coding(camera, video_mode, coding);
         if(err!=DC1394_SUCCESS){
-            ofLog( OF_LOG_ERROR, "Failed to set color coding");
+            ofLog( OF_LOG_ERROR, "Failed to set Format 7 color coding");
             return false;
         }
 
@@ -514,18 +515,18 @@ void Libdc1394Grabber::initInternalBuffers()
 
 	finalImageDataBufferLength = width*height*bpp;
 	pixels = new unsigned char[finalImageDataBufferLength];
-	for ( int i = 0; i < finalImageDataBufferLength; i++ ) { pixels[i] = 0; }
+	memset(pixels,0,finalImageDataBufferLength);
 
 }
 
 void Libdc1394Grabber::threadedFunction()
 {
-	while( 1 )
-	{
-		captureFrame();
-		ofSleepMillis(2);
-	}
-	return;
+    while( 1 )
+    {
+        captureFrame();
+        ofSleepMillis(2);
+    }
+    return;
 }
 
 unsigned char* Libdc1394Grabber::getPixels()
@@ -536,20 +537,26 @@ unsigned char* Libdc1394Grabber::getPixels()
 
 bool Libdc1394Grabber::grabFrame(unsigned char ** _pixels)
 {
+    lock();
     if(bHasNewFrame)
     {
         bHasNewFrame = false;
         memcpy(*_pixels,pixels,width*height*bpp);
+        unlock();
         return true;
     }
-    else return false;
+    else {
+    	unlock();
+    	return false;
+    }
 }
 
 void Libdc1394Grabber::captureFrame()
 {
-
+    lock();
 	if( !bHasNewFrame && (camera != NULL ))
 	{
+	    unlock();
 	    if(discardFrames)
 	    {
             /*---------------------------------------------------------------------------
@@ -591,7 +598,9 @@ void Libdc1394Grabber::captureFrame()
 
 		dc1394_capture_enqueue(camera, frame);
 
+        lock();
 		bHasNewFrame = true;
+		unlock();
 	}
 
 }
@@ -599,65 +608,73 @@ void Libdc1394Grabber::captureFrame()
 
 void Libdc1394Grabber::processCameraImageData( unsigned char* _cameraImageData )
 {
-    static bool writeonce = true;
 
 	if( sourceFormatLibDC == DC1394_COLOR_CODING_RAW8 || sourceFormatLibDC == DC1394_COLOR_CODING_MONO8 )
 	{
 
 		if( targetFormat == VID_FORMAT_GREYSCALE || targetFormat == VID_FORMAT_Y8 )
 		{
-			pixels = _cameraImageData;
-//			if(writeonce) {
-//			    writeonce = false;
-//                cout << "processCameraImageData() targetFormat  = VID_FORMAT_GREYSCALE || targetFormat == VID_FORMAT_Y8" << endl;
-//			}
+            lock();
+			memcpy(pixels, _cameraImageData, width * height * bpp);
+			unlock();
 		}
 		else if( targetFormat == VID_FORMAT_RGB )
 		{
+		    lock();
 			dc1394_bayer_decoding_8bit( _cameraImageData, pixels, width, height,  bayerPattern, bayerMethod );
-			if(writeonce) {
-			    writeonce = false;
-                cout << "processCameraImageData() targetFormat  = VID_FORMAT_RGB" << endl;
-			}
+			unlock();
 		}
 		else if ( targetFormat == VID_FORMAT_BGR )
 		{
+		    lock();
 			dc1394_bayer_decoding_8bit( _cameraImageData, pixels, width, height,  bayerPattern, bayerMethod ); // we should really be converting this
+			unlock();
 		}
 		else
 		{
-			cout << "************* Libdc1394Grabber::processCameraImageData Unsupported target format (" << videoFormatToString( targetFormat ) << ") from DC1394_COLOR_CODING_RAW8 or DC1394_COLOR_CODING_MONO8 *************" << endl;
+			ofLog(OF_LOG_ERROR, "Unsupported target format %s from DC1394_COLOR_CODING_RAW8 or DC1394_COLOR_CODING_MONO8 ",videoFormatToString( targetFormat ).c_str());
 		}
 
 	}
 	else if(  sourceFormatLibDC == DC1394_COLOR_CODING_MONO16 || sourceFormatLibDC == DC1394_COLOR_CODING_RAW16 )
 	{
+	    // These are not implemented yet....no camera to test
 		if( targetFormat == VID_FORMAT_RGB )
 		{
-//			dc1394_bayer_decoding_16bit( _cameraImageData, pixels, width, height,  bayerPattern, bayerMethod );
+		    ofLog(OF_LOG_ERROR, "Unsupported target format VID_FORMAT_RGB from DC1394_COLOR_CODING_RAW8 or DC1394_COLOR_CODING_MONO8 ");
+		    //lock();
+			//dc1394_bayer_decoding_16bit( _cameraImageData, pixels, width, height,  bayerPattern, bayerMethod );
+			//unlock();
 		}
 		else if ( targetFormat == VID_FORMAT_BGR )
 		{
-//			dc1394_bayer_decoding_16bit( _cameraImageData, pixels, width, height,  bayerPattern, bayerMethod ); // we should really be converting this
+		    ofLog(OF_LOG_ERROR, "Unsupported target format VID_FORMAT_BGR from DC1394_COLOR_CODING_MONO16 or DC1394_COLOR_CODING_RAW16 ");
+		    //lock();
+			//dc1394_bayer_decoding_16bit( _cameraImageData, pixels, width, height,  bayerPattern, bayerMethod ); // we should really be converting this
+            //unlock();
 		}
 		else
 		{
-			cout << "************* Libdc1394Grabber::processCameraImageData Unsupported target format (" << videoFormatToString( targetFormat ) << ") from DC1394_COLOR_CODING_MONO16 or DC1394_COLOR_CODING_RAW16 *************" << endl;
+		    ofLog(OF_LOG_ERROR, "Unsupported target format %s from DC1394_COLOR_CODING_MONO16 or DC1394_COLOR_CODING_RAW16 ",videoFormatToString( targetFormat ).c_str());
 		}
 	}
 	else if(  sourceFormatLibDC == DC1394_COLOR_CODING_YUV411 || sourceFormatLibDC == DC1394_COLOR_CODING_YUV422 || sourceFormatLibDC == DC1394_COLOR_CODING_YUV444 )
 	{
 		if( targetFormat == VID_FORMAT_RGB )
 		{
+		    lock();
 			dc1394_convert_to_RGB8( _cameraImageData, pixels, width, height, YUV_BYTE_ORDER, sourceFormatLibDC, 16);
+			unlock();
 		}
 		else if ( targetFormat == VID_FORMAT_BGR )
 		{
+		    lock();
 			dc1394_convert_to_RGB8( _cameraImageData, pixels, width, height, YUV_BYTE_ORDER, sourceFormatLibDC, 16); // we should really be converting this
+			unlock();
 		}
 		else
 		{
-			cout << "************* Libdc1394Grabber::processCameraImageData Unsupported target format (" << videoFormatToString( targetFormat ) << ") from DC1394_COLOR_CODING_YUV411, DC1394_COLOR_CODING_YUV422 or DC1394_COLOR_CODING_YUV444 *************" << endl;
+		    ofLog(OF_LOG_ERROR, "Unsupported target format %s from DC1394_COLOR_CODING_YUV411, DC1394_COLOR_CODING_YUV422 or DC1394_COLOR_CODING_YUV444 ",videoFormatToString( targetFormat ).c_str());
 		}
 
 	}
@@ -665,22 +682,24 @@ void Libdc1394Grabber::processCameraImageData( unsigned char* _cameraImageData )
 	{
 		if( targetFormat == VID_FORMAT_RGB )
 		{
-		    pixels = _cameraImageData;
+            lock();
+			memcpy(pixels, _cameraImageData, width * height * bpp);
+			unlock();
 		}
 		else if ( targetFormat == VID_FORMAT_BGR )
 		{
-		    pixels = _cameraImageData;
-			//memcpy ( pixels, _cameraImageData, finalImageDataBufferLength ); // we should really be converting this
+            lock();
+			memcpy(pixels, _cameraImageData, width * height * bpp);
+			unlock();
 		}
 		else
 		{
-			cout << "************* Libdc1394Grabber::processCameraImageData Unsupported target format (" << videoFormatToString( targetFormat ) << ") from DC1394_COLOR_CODING_RGB8 *************" << endl;
+            ofLog(OF_LOG_ERROR, "Unsupported target format %s from DC1394_COLOR_CODING_RGB8",videoFormatToString( targetFormat ).c_str());
 		}
 	}
 	else
 	{
-
-		cout << "************* Libdc1394Grabber::processCameraImageData Unsupported source format! *************" << endl;
+		ofLog(OF_LOG_ERROR, "Libdc1394Grabber::processCameraImageData() : Unsupported source format!");
 	}
 
 }
@@ -692,14 +711,13 @@ void Libdc1394Grabber::setBayerPatternIfNeeded()
 		if( targetFormat == VID_FORMAT_RGB || targetFormat == VID_FORMAT_BGR || targetFormat == VID_FORMAT_GREYSCALE )
 		{
 
-//		dc1394color_filter_t tmpBayerPattern;
-//		if( dc1394_format7_get_color_filter(camera, video_mode, &tmpBayerPattern) != DC1394_SUCCESS )
+//		if( dc1394_format7_get_color_filter(camera, video_mode, &bayerPattern) != DC1394_SUCCESS )
 //		{
-//			cout << "Libdc1394Grabber::setBayerPatternIfNeeded(), Failed to get the dc1394_format7_get_color_filter." << endl;
+//			ofLog(OF_LOG_ERROR, "Libdc1394Grabber::setBayerPatternIfNeeded(), Failed to get the dc1394_format7_get_color_filter.");
 //		}
 //		else
 //		{
-//			cout << "Libdc1394Grabber::setBayerPatternIfNeeded(), We got a pattern, it was: " << tmpBayerPattern << endl;
+//			ofLog(OF_LOG_ERROR, "Libdc1394Grabber::setBayerPatternIfNeeded(), We got a pattern, it was: %i", bayerPattern);
 //		}
 
 
@@ -718,30 +736,35 @@ void Libdc1394Grabber::setBayerPatternIfNeeded()
 void Libdc1394Grabber::cleanupCamera()
 {
 	stopThread();
-	//while(isThreadRunning()) 1;
+
 	//this sleep seems necessary, at least on OSX, to avoid an occasional hang on exit
 	ofSleepMillis(20);
 
 	dc1394switch_t is_iso_on = DC1394_OFF;
-	if (dc1394_video_get_transmission(camera, &is_iso_on)!=DC1394_SUCCESS) {
-		is_iso_on = DC1394_ON; // try to shut ISO anyway
+	if(camera) {
+        if (dc1394_video_get_transmission(camera, &is_iso_on)!=DC1394_SUCCESS) {
+            is_iso_on = DC1394_ON; // try to shut ISO anyway
+        }
+        if (is_iso_on > DC1394_OFF) {
+            if (dc1394_video_set_transmission(camera, DC1394_OFF)!=DC1394_SUCCESS) {
+                ofLog(OF_LOG_ERROR, "Could not stop ISO transmission!");
+            }
+        }
 	}
-	if (is_iso_on > DC1394_OFF) {
-		if (dc1394_video_set_transmission(camera, DC1394_OFF)!=DC1394_SUCCESS) {
-			fprintf(stderr,"Could not stop ISO transmission\n");
-		}
-	}
-	
+
 	if(pixels) {
 		delete [] pixels;
 		pixels = NULL;
 	}
 
 	/* cleanup and exit */
-    dc1394_camera_free_list (cameraList);
-	dc1394_capture_stop(camera);
-	dc1394_camera_free (camera);
-	camera = NULL;
+	if(cameraList)
+        dc1394_camera_free_list (cameraList);
+    if(camera) {
+        dc1394_capture_stop(camera);
+        dc1394_camera_free (camera);
+        camera = NULL;
+	}
 
 	if(dc1394) {
 		dc1394_free (dc1394);
