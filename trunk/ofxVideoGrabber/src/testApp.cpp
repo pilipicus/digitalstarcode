@@ -13,26 +13,29 @@ void testApp::setup(){
 	ofSetVerticalSync(true);
 	ofSetLogLevel(OF_LOG_VERBOSE);
 
-    //vidGrabber.setDeviceID("814436102632562");
-    //vidGrabber.setDeviceID(0);
+    vidGrabber.setDeviceID(0);
 
 
     Libdc1394Grabber *sdk = new Libdc1394Grabber;
-	sdk->setFormat7(false);
+	//sdk->setFormat7(VID_FORMAT7_0);
 	sdk->listDevices();
 	sdk->setDiscardFrames(true);
 	sdk->set1394bMode(false);
-	//sdk->setROI(x,y,width,height);*/
+	//sdk->setROI(x,y,width,height);
+	sdk->setDeviceID("814436102632562");
+
+	ofxIIDCSettings *settings = new ofxIIDCSettings;
+	settings->setXMLFilename("mySettingsFile.xml");
 
 	//vidGrabber.setVerbose(true);
-
-    bool result = vidGrabber.initGrabber( camWidth, camHeight, VID_FORMAT_YUV422, VID_FORMAT_RGB, 30, true, sdk );
+    bool result = vidGrabber.initGrabber( camWidth, camHeight, VID_FORMAT_YUV422, VID_FORMAT_RGB, 30, true, sdk, settings );
 
     //bool result = vidGrabber.initGrabber( camWidth, camHeight, VID_FORMAT_YUV422, VID_FORMAT_RGB, 30 );
 	// or like this:
 	//bool result = vidGrabber.initGrabber( camWidth, camHeight, VID_FORMAT_GREYSCALE, VID_FORMAT_GREYSCALE, 30, true, new Libdc1394Grabber);
 	// or like this:
 	//bool result = vidGrabber.initGrabber( camWidth, camHeight, VID_FORMAT_YUV411, VID_FORMAT_RGB, 30, true, new Libdc1394Grabber, new ofxIIDCSettings);
+
 
 
 	if(result) {

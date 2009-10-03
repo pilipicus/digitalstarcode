@@ -17,8 +17,7 @@ class ofxVideoGrabberSDK
             int _targetFormat = VID_FORMAT_RGB ,
             int _frameRate = 15,
             bool _bVerbose = false,
-            int deviceID = -1,
-            string deviceString = "" ) = 0;
+            int deviceID = -1) = 0;
 		virtual void close() = 0;
 		virtual unsigned char* getPixels() = 0;
 		virtual bool grabFrame(unsigned char ** _pixels) = 0;
@@ -35,8 +34,6 @@ class ofxVideoGrabberSDK
         virtual void setFeatureValue( float _val1, float _val2, int _feature) = 0;
         virtual void setDeviceID(int _deviceID) = 0;
 
-        virtual void setDeviceID(string _deviceIDString) { ofLog(OF_LOG_WARNING,"setDeviceID(string _deviceIDString) not implemented.\n Override this function.");}
-
 
 		unsigned int width;
 		unsigned int height;
@@ -51,7 +48,6 @@ class ofxVideoGrabberSDK
 		unsigned char* pixels;
 		int sourceFormat;
 		int targetFormat;
-		string deviceString;
 		unsigned long deviceID;
 		int cameraIndex;
 

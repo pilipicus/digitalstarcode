@@ -19,7 +19,7 @@ ofxControlPanel::ofxControlPanel(){
     hidden          = false;
     bDraggable      = true;
 
-    currentXmlFile = "controlPanelSettings.xml";
+    currentXmlFile = "";
     incrementSaveName = "";
     xmlObjects.clear();
 }
@@ -569,8 +569,17 @@ void ofxControlPanel::saveSettings(){
 
         settings.saveFile(xmlName);
     }
+    if(currentXmlFile == "") {
+        currentXmlFile = "controlPanelSettings.xml";
+    }
     settings.saveFile(currentXmlFile);
     usingXml = true;
+}
+
+//-------------------------------
+void ofxControlPanel::setXMLFilename(string xmlFile)
+{
+    currentXmlFile = xmlFile;
 }
 
 // ############################################################## //

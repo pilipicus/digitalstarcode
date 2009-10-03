@@ -34,7 +34,7 @@ Libdc1394Grabber::Libdc1394Grabber()
 
     bChooseDevice = false;
 	bSet1394bMode = false;
-	cameraUnit = -1;
+	cameraUnit = 0;
 	cameraIndex = -1;
 	cameraGUID = 0;
 }
@@ -66,7 +66,7 @@ void Libdc1394Grabber::close()
 	}
 }
 
-bool Libdc1394Grabber::init( int _width, int _height, int _format, int _targetFormat, int _frameRate, bool _bVerbose, int _deviceID, string _deviceString )
+bool Libdc1394Grabber::init( int _width, int _height, int _format, int _targetFormat, int _frameRate, bool _bVerbose, int _deviceID )
 {
     ofLog(OF_LOG_VERBOSE, "Input format: %s   TargetFormat: %s",videoFormatToString(_format).c_str(), videoFormatToString(_targetFormat).c_str());
 
@@ -74,9 +74,6 @@ bool Libdc1394Grabber::init( int _width, int _height, int _format, int _targetFo
 
 	if(_deviceID != -1) {
         setDeviceID(_deviceID);
-	}
-	if(_deviceString != "") {
-        setDeviceID(_deviceString);
 	}
 
     /* initialise camera */
@@ -97,8 +94,8 @@ bool Libdc1394Grabber::init( int _width, int _height, int _format, int _targetFo
 
 	initInternalBuffers();
 
-	startThread(false, false);   // blocking, verbose
-	//startThread(true, false);
+	//startThread(false, false);   // blocking, verbose
+	startThread(true, false);
 
 	return true;
 }
@@ -184,10 +181,66 @@ void Libdc1394Grabber::setDeviceID(string _deviceGUID)
     std::istringstream ss( _deviceGUID );
     ss >> hex >> cameraGUID;
 
-	ofLog(OF_LOG_NOTICE, "Trying to use Camera with GUID %llu, unit %i",cameraGUID, cameraUnit);
+	ofLog(OF_LOG_NOTICE, "Trying to use Camera with GUID %llx, unit %i",cameraGUID, cameraUnit);
 	bChooseDevice = true;
 }
 
+void Libdc1394Grabber::setFormat7(enum VID_FORMAT7_MODES _format7_mode)
+{
+    bUseFormat7 = true;
+
+    switch(_format7_mode)
+    {
+        case VID_FORMAT7_0:
+            video_mode = DC1394_VIDEO_MODE_FORMAT7_0;
+            break;
+        case VID_FORMAT7_1:
+            video_mode = DC1394_VIDEO_MODE_FORMAT7_1;
+            break;
+        case VID_FORMAT7_2:
+            video_mode = DC1394_VIDEO_MODE_FORMAT7_2;
+            break;
+        case VID_FORMAT7_3:
+            video_mode = DC1394_VIDEO_MODE_FORMAT7_3;
+            break;
+        case VID_FORMAT7_4:
+            video_mode = DC1394_VIDEO_MODE_FORMAT7_4;
+            break;
+        case VID_FORMAT7_5:
+            video_mode = DC1394_VIDEO_MODE_FORMAT7_5;
+            break;
+        case VID_FORMAT7_6:
+            video_mode = DC1394_VIDEO_MODE_FORMAT7_6;
+            break;
+        case VID_FORMAT7_7:
+            video_mode = DC1394_VIDEO_MODE_FORMAT7_7;
+            break;
+        default:
+            video_mode = DC1394_VIDEO_MODE_FORMAT7_0;
+            break;
+    }
+
+}
+
+void Libdc1394Grabber::setROI(int x, int y, int width, int height){
+    ROI_x=x; ROI_y=y; ROI_width=width; ROI_height=height;
+}
+
+void Libdc1394Grabber::initInternalBuffers()
+{
+	if( targetFormat == VID_FORMAT_GREYSCALE || targetFormat == VID_FORMAT_Y8 )
+        { bpp = VID_BPP_GREY; }
+	else if( targetFormat == VID_FORMAT_RGB || targetFormat == VID_FORMAT_BGR )
+        { bpp = VID_BPP_RGB; }
+	else {
+	    ofLog(OF_LOG_ERROR, " *** Libdc1394Grabber: Unsupported output format! ***");
+    }
+
+	finalImageDataBufferLength = width*height*bpp;
+	pixels = new unsigned char[finalImageDataBufferLength];
+	memset(pixels,0,finalImageDataBufferLength);
+
+}
 bool Libdc1394Grabber::initCamera( int _width, int _height, dc1394video_mode_t _videoMode, dc1394framerate_t _frameRate, dc1394color_coding_t _coding )
 {
     dc1394error_t err;
@@ -213,7 +266,7 @@ bool Libdc1394Grabber::initCamera( int _width, int _height, dc1394video_mode_t _
 			bool bFound = false;
 			for (uint32_t index = 0; index < cameraList->num; index++) {
 				if (cameraList->ids[index].guid == cameraGUID) {
-				    if(cameraUnit != -1) {
+				    if(cameraUnit >= 0) {
 				        if(cameraUnit == cameraList->ids[index].unit) {
                             bFound = true;
                             cameraIndex = index;
@@ -278,6 +331,17 @@ bool Libdc1394Grabber::initCamera( int _width, int _height, dc1394video_mode_t _
 
 	ofLog(OF_LOG_NOTICE, "Using video device %i with GUID %llx",cameraIndex,camera->guid);
 
+
+    // These methods would cleanup the mess left behind by other processes,
+    // but as of (libdc1394 2.0.0 rc9) this is not supported for the Juju stack
+        dc1394_iso_release_bandwidth(camera, INT_MAX);
+    //    for (int channel = 0; channel < 64; ++channel) {
+    //        dc1394_iso_release_channel(camera, channel);
+    //    }
+
+    // This is rude, but for now needed (Juju)...
+    dc1394_reset_bus(camera);
+
 	/* Select camera transfer mode */
     if ((camera->bmode_capable > 0) && (bSet1394bMode)) {
         dc1394_video_set_operation_mode(camera, DC1394_OPERATION_MODE_1394B);
@@ -317,6 +381,7 @@ bool Libdc1394Grabber::initCamera( int _width, int _height, dc1394video_mode_t _
             break;
         }
     }
+
     video_mode = _videoMode;
 
 
@@ -495,30 +560,6 @@ bool Libdc1394Grabber::initCamera( int _width, int _height, dc1394video_mode_t _
 	return true;
 }
 
-void Libdc1394Grabber::setFormat7(bool _format7){
-    bUseFormat7 = _format7;
-}
-
-void Libdc1394Grabber::setROI(int x, int y, int width, int height){
-    ROI_x=x; ROI_y=y; ROI_width=width; ROI_height=height;
-}
-
-void Libdc1394Grabber::initInternalBuffers()
-{
-	if( targetFormat == VID_FORMAT_GREYSCALE || targetFormat == VID_FORMAT_Y8 )
-        { bpp = VID_BPP_GREY; }
-	else if( targetFormat == VID_FORMAT_RGB || targetFormat == VID_FORMAT_BGR )
-        { bpp = VID_BPP_RGB; }
-	else {
-	    ofLog(OF_LOG_ERROR, " *** Libdc1394Grabber: Unsupported output format! ***");
-    }
-
-	finalImageDataBufferLength = width*height*bpp;
-	pixels = new unsigned char[finalImageDataBufferLength];
-	memset(pixels,0,finalImageDataBufferLength);
-
-}
-
 void Libdc1394Grabber::threadedFunction()
 {
     while( 1 )
@@ -601,6 +642,8 @@ void Libdc1394Grabber::captureFrame()
         lock();
 		bHasNewFrame = true;
 		unlock();
+	} else {
+        unlock();
 	}
 
 }
