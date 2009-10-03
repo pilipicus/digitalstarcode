@@ -63,6 +63,7 @@ class ofxControlPanel: public guiBaseObject{
         void reloadSettings();
         void saveSettings(string xmlFile);
         void saveSettings();
+        void setXMLFilename(string xmlFile);
 
         void setDraggable(bool bDrag);
         void setMinimized(bool bMinimize);

@@ -114,6 +114,18 @@ enum VID_FORMATS
 	VID_FORMAT_RGBA		  = 11
 };
 
+enum VID_FORMAT7_MODES
+{
+    VID_FORMAT7_0       = 0,
+    VID_FORMAT7_1       = 1,
+    VID_FORMAT7_2       = 2,
+    VID_FORMAT7_3       = 3,
+    VID_FORMAT7_4       = 4,
+    VID_FORMAT7_5       = 5,
+    VID_FORMAT7_6       = 6,
+    VID_FORMAT7_7       = 7,
+};
+
 enum VID_LOOP_MODES
 {
 	VID_LOOP_MODE_OFF		= 0,

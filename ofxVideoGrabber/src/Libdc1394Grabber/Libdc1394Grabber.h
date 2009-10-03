@@ -28,8 +28,7 @@ class Libdc1394Grabber : public ofxVideoGrabberSDK, public ofxThread
             int _targetFormat = VID_FORMAT_BGR ,
             int _frameRate = -1,
             bool _bVerbose = false,
-            int _deviceID = -1,
-            string _deviceString = "" );
+            int _deviceID = -1);
         void close();
         void listDevices();
 
@@ -40,9 +39,10 @@ class Libdc1394Grabber : public ofxVideoGrabberSDK, public ofxThread
 
         /* SDK specific functions */
         void setDiscardFrames(bool bDiscard);
-        void setFormat7(bool format7);
+        void setFormat7(enum VID_FORMAT7_MODES _format7_mode = VID_FORMAT7_0);
 		void setROI(int x, int y, int width, int height);
-		void set1394bMode(bool mode); 
+		void set1394bMode(bool mode);
+        void setDeviceID(string _deviceGUID);
 
 		/* Features */
 		void initFeatures();
@@ -68,7 +68,6 @@ class Libdc1394Grabber : public ofxVideoGrabberSDK, public ofxThread
 		void captureFrame();
 		void processCameraImageData( unsigned char* _cameraImageData );
         void setDeviceID(int _deviceID);
-        void setDeviceID(string _deviceGUID);
 		void setBayerPatternIfNeeded();
 		void initInternalBuffers();
 		void enumerateDevices();

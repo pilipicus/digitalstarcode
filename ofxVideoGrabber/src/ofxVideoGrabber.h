@@ -38,7 +38,6 @@ class ofxVideoGrabber: public ofBaseVideo
 		ofTexture &     getTextureReference();
 		void 			setVerbose(bool bTalkToMe);
 		void			setDeviceID(int _deviceID);
-		void			setDeviceID(string _deviceID);
 		void            setUseTexture(bool bUse);
 		void            draw(float x, float y);
 		void            draw(float x, float y, float w, float h);
@@ -48,11 +47,12 @@ class ofxVideoGrabber: public ofBaseVideo
 
 
 
-        ofxVideoGrabberSettings *   settings;
+
 
 
 	protected:
         ofxVideoGrabberSDK *        videoGrabber;
+        ofxVideoGrabberSettings *   settings;
 
         bool bGrabberInited;
         bool bUseTexture;
@@ -65,7 +65,6 @@ class ofxVideoGrabber: public ofBaseVideo
         unsigned char* pixels;
         int targetFormat;
         int deviceID;
-        string deviceString;
 
 };
 

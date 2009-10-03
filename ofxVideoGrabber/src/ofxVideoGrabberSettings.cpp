@@ -56,3 +56,8 @@ void ofxVideoGrabberSettings::mouseReleased(ofMouseEventArgs & args)
     panel.mouseReleased();
 }
 
+void ofxVideoGrabberSettings::setXMLFilename(string xmlFile)
+{
+    panel.setXMLFilename(xmlFile);
+}
+

@@ -11,7 +11,6 @@ ofxVideoGrabber::ofxVideoGrabber()
 	bVerbose = false;
 	pixels = NULL;
 	deviceID = -1;
-	deviceString = "";
 }
 
 //--------------------------------------------------------------------
@@ -26,7 +25,7 @@ bool ofxVideoGrabber::initGrabber( int _width, int _height, int _format, int _ta
     videoGrabber = sdk;
     settings = _settings;
     videoGrabber->bVerbose = bVerbose;
-    bool initResult = videoGrabber->init( _width, _height, _format, _targetFormat, _frameRate, bVerbose, deviceID, deviceString );
+    bool initResult = videoGrabber->init( _width, _height, _format, _targetFormat, _frameRate, bVerbose, deviceID);
 
     width = videoGrabber->width;
     height = videoGrabber->height;
@@ -181,12 +180,6 @@ void ofxVideoGrabber::listDevices()
 void ofxVideoGrabber::setDeviceID(int _deviceID)
 {
     deviceID = _deviceID;
-}
-
-//--------------------------------------------------------------------
-void ofxVideoGrabber::setDeviceID(string _deviceString)
-{
-    deviceString = _deviceString;
 }
 
 //--------------------------------------------------------------------
