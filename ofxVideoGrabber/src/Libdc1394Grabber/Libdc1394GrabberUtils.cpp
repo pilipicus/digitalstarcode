@@ -119,8 +119,23 @@ const char * Libdc1394GrabberUtils::print_color_coding( uint32_t color_id )
 void Libdc1394GrabberUtils::print_mode_info( dc1394camera_t *camera , dc1394video_mode_t mode )
 {
 
+
     ofLog(OF_LOG_NOTICE,"Mode: %s",print_format(mode));
 
+	switch (mode) {
+		case DC1394_VIDEO_MODE_FORMAT7_0:
+		case DC1394_VIDEO_MODE_FORMAT7_1:
+		case DC1394_VIDEO_MODE_FORMAT7_2:
+		case DC1394_VIDEO_MODE_FORMAT7_3:
+		case DC1394_VIDEO_MODE_FORMAT7_4:
+		case DC1394_VIDEO_MODE_FORMAT7_5:
+		case DC1394_VIDEO_MODE_FORMAT7_6:			
+		case DC1394_VIDEO_MODE_FORMAT7_7:	
+			return;
+		default:
+			break;
+	};
+	
     dc1394framerates_t framerates;
     if(dc1394_video_get_supported_framerates(camera,mode,&framerates) != DC1394_SUCCESS) {
         ofLog(OF_LOG_ERROR, "Can't get frame rates.");
