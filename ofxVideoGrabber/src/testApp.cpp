@@ -22,13 +22,13 @@ void testApp::setup(){
 	sdk->setDiscardFrames(true);
 	sdk->set1394bMode(false);
 	//sdk->setROI(0,0,320,200);
-	sdk->setDeviceID("b09d01008bc69e:0");
+	//sdk->setDeviceID("b09d01008bc69e:0");
 
 	ofxIIDCSettings *settings = new ofxIIDCSettings;
 	settings->setXMLFilename("mySettingsFile.xml");
 
 	vidGrabber.setVerbose(true);
-    bool result = vidGrabber.initGrabber( camWidth, camHeight, VID_FORMAT_Y16, VID_FORMAT_RGB, 30, true, sdk, settings );
+    bool result = vidGrabber.initGrabber( camWidth, camHeight, VID_FORMAT_YUV411, VID_FORMAT_RGB, 30, true, sdk, settings );
 
     //bool result = vidGrabber.initGrabber( camWidth, camHeight, VID_FORMAT_YUV422, VID_FORMAT_RGB, 30 );
 	// or like this:
