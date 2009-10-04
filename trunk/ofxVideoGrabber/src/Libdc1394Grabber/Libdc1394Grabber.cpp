@@ -710,6 +710,16 @@ void Libdc1394Grabber::captureFrame()
 
 }
 
+static void rgb2bgr(const unsigned char *src, unsigned char *dest, unsigned long long int NumPixels)
+{
+	register int i = NumPixels - 1;
+	register int j = NumPixels - 1;	
+	while (i > 0) {
+		dest[j--] = src[i--];
+		dest[j--] = src[i--];
+		dest[j--] = src[i--];
+	}
+}
 
 void Libdc1394Grabber::processCameraImageData( unsigned char* _cameraImageData )
 {
@@ -744,12 +754,13 @@ void Libdc1394Grabber::processCameraImageData( unsigned char* _cameraImageData )
 	else if(  sourceFormatLibDC == DC1394_COLOR_CODING_MONO16 || sourceFormatLibDC == DC1394_COLOR_CODING_RAW16 )
 	{
 	    // These are not implemented yet....
-		if( targetFormat == VID_FORMAT_RGB )
+		if( targetFormat == VID_FORMAT_RGB)
 		{
 		    ofLog(OF_LOG_ERROR, "Unsupported target format VID_FORMAT_RGB from DC1394_COLOR_CODING_MONO16 or DC1394_COLOR_CODING_RAW16 ");
-		    //lock();
-			//dc1394_bayer_decoding_16bit( _cameraImageData, pixels, width, height,  bayerPattern, bayerMethod );
-			//unlock();
+		    lock();
+			//dc1394_bayer_decoding_16bit( _cameraImageData, pixels, width, height,  bayerPattern, bayerMethod, 16 );
+			dc1394_convert_to_RGB8(_cameraImageData, pixels, width, height, 0, sourceFormatLibDC, 16);
+			unlock();
 		}
 		else if ( targetFormat == VID_FORMAT_BGR )
 		{
@@ -758,6 +769,12 @@ void Libdc1394Grabber::processCameraImageData( unsigned char* _cameraImageData )
 			//dc1394_bayer_decoding_16bit( _cameraImageData, pixels, width, height,  bayerPattern, bayerMethod ); // we should really be converting this
             //unlock();
 		}
+		else if( targetFormat == VID_FORMAT_GREYSCALE)
+		{
+		    lock();
+			dc1394_convert_to_MONO8(_cameraImageData, pixels, width, height, 0, sourceFormatLibDC, 16);
+			unlock();
+		}		
 		else
 		{
 		    ofLog(OF_LOG_ERROR, "Unsupported target format %s from DC1394_COLOR_CODING_MONO16 or DC1394_COLOR_CODING_RAW16 ",videoFormatToString( targetFormat ).c_str());
