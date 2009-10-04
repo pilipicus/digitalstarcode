@@ -26,5 +26,5 @@ Libdc1394 grabber improvements:
  * Cleaned up initialization code
  * Initialise cameras by GUID and unit number (latter is useful for specifying stereo  cams)
  * Mono16 greyscale support
-* Bandwidth and ISO cleanup on start-up
-* Almost all output messages are using the ofLog system
+ * Bandwidth and ISO cleanup on start-up
+ * Almost all output messages are using the ofLog system
