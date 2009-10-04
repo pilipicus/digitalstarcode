@@ -4,8 +4,8 @@
 //--------------------------------------------------------------
 void testApp::setup(){
 
-	camWidth 		= 320;	// try to grab at this size.
-	camHeight 		= 240;
+	camWidth 		= 640;	// try to grab at this size.
+	camHeight 		= 480;
 	appWidth        = ofGetWidth();
 	appHeight       = ofGetHeight();
 	mytimeThen		= 0.0f;
@@ -21,14 +21,14 @@ void testApp::setup(){
 	sdk->listDevices();
 	sdk->setDiscardFrames(true);
 	sdk->set1394bMode(false);
-	//sdk->setROI(x,y,width,height);
-	sdk->setDeviceID("814436102632562");
+	//sdk->setROI(0,0,320,200);
+	sdk->setDeviceID("b09d01008bc69e:0");
 
 	ofxIIDCSettings *settings = new ofxIIDCSettings;
 	settings->setXMLFilename("mySettingsFile.xml");
 
-	//vidGrabber.setVerbose(true);
-    bool result = vidGrabber.initGrabber( camWidth, camHeight, VID_FORMAT_YUV422, VID_FORMAT_RGB, 30, true, sdk, settings );
+	vidGrabber.setVerbose(true);
+    bool result = vidGrabber.initGrabber( camWidth, camHeight, VID_FORMAT_Y16, VID_FORMAT_RGB, 30, true, sdk, settings );
 
     //bool result = vidGrabber.initGrabber( camWidth, camHeight, VID_FORMAT_YUV422, VID_FORMAT_RGB, 30 );
 	// or like this:

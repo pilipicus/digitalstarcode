@@ -113,6 +113,7 @@ class Libdc1394Grabber : public ofxVideoGrabberSDK, public ofxThread
         uint64_t cameraGUID;
         int cameraIndex;
         int cameraUnit;
+		bool closeCamera;
 
         /* Format 7 and ROI */
         bool bUseFormat7;

@@ -29,14 +29,19 @@ Libdc1394Grabber::Libdc1394Grabber()
 	pixels = NULL;
 	cameraList = NULL;
 
-	ROI_x=0; ROI_y=0; ROI_width=0; ROI_height=0;
+	ROI_x=0; 
+	ROI_y=0; 
+	ROI_width=0; 
+	ROI_height=0;
 	packet_size = 0;
 
     bChooseDevice = false;
 	bSet1394bMode = false;
+	bUseFormat7 = false;
 	cameraUnit = 0;
 	cameraIndex = -1;
 	cameraGUID = 0;
+	closeCamera = false;
 }
 
 Libdc1394Grabber::~Libdc1394Grabber()
@@ -66,6 +71,51 @@ void Libdc1394Grabber::close()
 	}
 }
 
+void Libdc1394Grabber::cleanupCamera()
+{
+	closeCamera = true;
+	stopThread();
+	ofLog(OF_LOG_VERBOSE,"Stopped capture thread.");
+	
+	//this sleep seems necessary, at least on OSX, to avoid an occasional hang on exit
+	ofSleepMillis(40);
+	
+	dc1394switch_t is_iso_on = DC1394_OFF;
+	if(camera) {
+        if (dc1394_video_get_transmission(camera, &is_iso_on)!=DC1394_SUCCESS) {
+            is_iso_on = DC1394_ON; // try to shut ISO anyway
+        }
+        if (is_iso_on > DC1394_OFF) {
+            if (dc1394_video_set_transmission(camera, DC1394_OFF)!=DC1394_SUCCESS) {
+                ofLog(OF_LOG_ERROR, "Could not stop ISO transmission!");
+            }
+        }
+	}
+	ofLog(OF_LOG_VERBOSE,"Stopped ISO transmission.");
+	
+	/* cleanup and exit */
+	if(cameraList)
+        dc1394_camera_free_list (cameraList);
+    if(camera) {
+        dc1394_capture_stop(camera);
+        dc1394_camera_free (camera);
+        camera = NULL;
+	}
+	ofLog(OF_LOG_VERBOSE,"Stopped camera.");
+	
+	if(dc1394) {
+		dc1394_free (dc1394);
+		dc1394 = NULL;
+	}
+	
+	if(pixels) {
+		delete [] pixels;
+		pixels = NULL;
+	}
+	
+}
+
+
 bool Libdc1394Grabber::init( int _width, int _height, int _format, int _targetFormat, int _frameRate, bool _bVerbose, int _deviceID )
 {
     ofLog(OF_LOG_VERBOSE, "Input format: %s   TargetFormat: %s",videoFormatToString(_format).c_str(), videoFormatToString(_targetFormat).c_str());
@@ -94,8 +144,7 @@ bool Libdc1394Grabber::init( int _width, int _height, int _format, int _targetFo
 
 	initInternalBuffers();
 
-	//startThread(false, false);   // blocking, verbose
-	startThread(true, false);
+	startThread(true, false); //blocking, verbose
 
 	return true;
 }
@@ -148,6 +197,11 @@ void Libdc1394Grabber::listDevices()
     }
 
     ofLog(OF_LOG_NOTICE,"There were %d cameras found.", numCameras );
+}
+
+void Libdc1394Grabber::setDiscardFrames(bool bDiscard)
+{
+    discardFrames = bDiscard;
 }
 
 void Libdc1394Grabber::set1394bMode(bool mode)
@@ -223,7 +277,10 @@ void Libdc1394Grabber::setFormat7(enum VID_FORMAT7_MODES _format7_mode)
 }
 
 void Libdc1394Grabber::setROI(int x, int y, int width, int height){
-    ROI_x=x; ROI_y=y; ROI_width=width; ROI_height=height;
+    ROI_x = x; 
+	ROI_y = y; 
+	ROI_width = width; 
+	ROI_height = height;
 }
 
 void Libdc1394Grabber::initInternalBuffers()
@@ -334,14 +391,18 @@ bool Libdc1394Grabber::initCamera( int _width, int _height, dc1394video_mode_t _
 
     // These methods would cleanup the mess left behind by other processes,
     // but as of (libdc1394 2.0.0 rc9) this is not supported for the Juju stack
+#ifdef TARGET_OSX	
         dc1394_iso_release_bandwidth(camera, INT_MAX);
-    //    for (int channel = 0; channel < 64; ++channel) {
-    //        dc1394_iso_release_channel(camera, channel);
-    //    }
-
-    // This is rude, but for now needed (Juju)...
-    dc1394_reset_bus(camera);
-
+        for (int channel = 0; channel < 64; ++channel) {
+            dc1394_iso_release_channel(camera, channel);
+        }
+#endif
+	
+#ifdef TARGET_LINUX
+	// This is rude, but for now needed (Juju)...
+	dc1394_reset_bus(camera);
+#endif
+	
 	/* Select camera transfer mode */
     if ((camera->bmode_capable > 0) && (bSet1394bMode)) {
         dc1394_video_set_operation_mode(camera, DC1394_OPERATION_MODE_1394B);
@@ -382,7 +443,8 @@ bool Libdc1394Grabber::initCamera( int _width, int _height, dc1394video_mode_t _
         }
     }
 
-    video_mode = _videoMode;
+	if(!bUseFormat7)
+		video_mode = _videoMode;
 
 
 	/*-----------------------------------------------------------------------
@@ -457,7 +519,7 @@ bool Libdc1394Grabber::initCamera( int _width, int _height, dc1394video_mode_t _
 	*-----------------------------------------------------------------------*/
 	ofLog(OF_LOG_VERBOSE,"Setting up capture.");
 
-	ofLog(OF_LOG_NOTICE,"Setting ISO Speed %i",speed);
+	ofLog(OF_LOG_NOTICE,"Setting ISO Speed %s",Libdc1394GrabberVideoFormatHelper::libcd1394ISOFormatToString(speed));
 	err = dc1394_video_set_iso_speed(camera, speed);
 	if(err!=DC1394_SUCCESS){
 		ofLog( OF_LOG_ERROR, "Failed to set iso speed");
@@ -681,10 +743,10 @@ void Libdc1394Grabber::processCameraImageData( unsigned char* _cameraImageData )
 	}
 	else if(  sourceFormatLibDC == DC1394_COLOR_CODING_MONO16 || sourceFormatLibDC == DC1394_COLOR_CODING_RAW16 )
 	{
-	    // These are not implemented yet....no camera to test
+	    // These are not implemented yet....
 		if( targetFormat == VID_FORMAT_RGB )
 		{
-		    ofLog(OF_LOG_ERROR, "Unsupported target format VID_FORMAT_RGB from DC1394_COLOR_CODING_RAW8 or DC1394_COLOR_CODING_MONO8 ");
+		    ofLog(OF_LOG_ERROR, "Unsupported target format VID_FORMAT_RGB from DC1394_COLOR_CODING_MONO16 or DC1394_COLOR_CODING_RAW16 ");
 		    //lock();
 			//dc1394_bayer_decoding_16bit( _cameraImageData, pixels, width, height,  bayerPattern, bayerMethod );
 			//unlock();
@@ -775,52 +837,6 @@ void Libdc1394Grabber::setBayerPatternIfNeeded()
 	}
 }
 
-
-void Libdc1394Grabber::cleanupCamera()
-{
-	stopThread();
-
-	//this sleep seems necessary, at least on OSX, to avoid an occasional hang on exit
-	ofSleepMillis(20);
-
-	dc1394switch_t is_iso_on = DC1394_OFF;
-	if(camera) {
-        if (dc1394_video_get_transmission(camera, &is_iso_on)!=DC1394_SUCCESS) {
-            is_iso_on = DC1394_ON; // try to shut ISO anyway
-        }
-        if (is_iso_on > DC1394_OFF) {
-            if (dc1394_video_set_transmission(camera, DC1394_OFF)!=DC1394_SUCCESS) {
-                ofLog(OF_LOG_ERROR, "Could not stop ISO transmission!");
-            }
-        }
-	}
-
-	if(pixels) {
-		delete [] pixels;
-		pixels = NULL;
-	}
-
-	/* cleanup and exit */
-	if(cameraList)
-        dc1394_camera_free_list (cameraList);
-    if(camera) {
-        dc1394_capture_stop(camera);
-        dc1394_camera_free (camera);
-        camera = NULL;
-	}
-
-	if(dc1394) {
-		dc1394_free (dc1394);
-		dc1394 = NULL;
-	}
-
-}
-
-
-void Libdc1394Grabber::setDiscardFrames(bool bDiscard)
-{
-    discardFrames = bDiscard;
-}
 
 /*-----------------------------------------------------------------------
  *  Feature Methods

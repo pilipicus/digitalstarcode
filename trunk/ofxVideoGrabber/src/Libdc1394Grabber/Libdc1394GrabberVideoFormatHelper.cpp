@@ -184,6 +184,32 @@ int Libdc1394GrabberVideoFormatHelper::libcd1394ColorFormatToVidFormat(  uint32_
 	return -1;
 }
 
+const char * Libdc1394GrabberVideoFormatHelper::libcd1394ISOFormatToString(dc1394speed_t _ISOspeed)
+{
+	switch (_ISOspeed)
+	{
+		case DC1394_ISO_SPEED_100:
+			return "100";
+			break;
+		case DC1394_ISO_SPEED_200:
+			return "200";
+			break;
+		case DC1394_ISO_SPEED_400:
+			return "400";
+			break;
+		case DC1394_ISO_SPEED_800:
+			return "800";
+			break;
+		case DC1394_ISO_SPEED_1600:
+			return "1600";
+			break;
+		case DC1394_ISO_SPEED_3200:
+			return "3200";
+			break;
+		default:
+			return "";
+	}
+}
 
 /*
 	VID_FORMAT_GREYSCALE  =	0,
