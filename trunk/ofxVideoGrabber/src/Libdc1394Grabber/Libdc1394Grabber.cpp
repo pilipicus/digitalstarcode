@@ -29,9 +29,9 @@ Libdc1394Grabber::Libdc1394Grabber()
 	pixels = NULL;
 	cameraList = NULL;
 
-	ROI_x=0; 
-	ROI_y=0; 
-	ROI_width=0; 
+	ROI_x=0;
+	ROI_y=0;
+	ROI_width=0;
 	ROI_height=0;
 	packet_size = 0;
 
@@ -76,10 +76,10 @@ void Libdc1394Grabber::cleanupCamera()
 	closeCamera = true;
 	stopThread();
 	ofLog(OF_LOG_VERBOSE,"Stopped capture thread.");
-	
+
 	//this sleep seems necessary, at least on OSX, to avoid an occasional hang on exit
 	ofSleepMillis(40);
-	
+
 	dc1394switch_t is_iso_on = DC1394_OFF;
 	if(camera) {
         if (dc1394_video_get_transmission(camera, &is_iso_on)!=DC1394_SUCCESS) {
@@ -92,7 +92,7 @@ void Libdc1394Grabber::cleanupCamera()
         }
 	}
 	ofLog(OF_LOG_VERBOSE,"Stopped ISO transmission.");
-	
+
 	/* cleanup and exit */
 	if(cameraList)
         dc1394_camera_free_list (cameraList);
@@ -102,17 +102,17 @@ void Libdc1394Grabber::cleanupCamera()
         camera = NULL;
 	}
 	ofLog(OF_LOG_VERBOSE,"Stopped camera.");
-	
+
 	if(dc1394) {
 		dc1394_free (dc1394);
 		dc1394 = NULL;
 	}
-	
+
 	if(pixels) {
 		delete [] pixels;
 		pixels = NULL;
 	}
-	
+
 }
 
 
@@ -277,9 +277,9 @@ void Libdc1394Grabber::setFormat7(enum VID_FORMAT7_MODES _format7_mode)
 }
 
 void Libdc1394Grabber::setROI(int x, int y, int width, int height){
-    ROI_x = x; 
-	ROI_y = y; 
-	ROI_width = width; 
+    ROI_x = x;
+	ROI_y = y;
+	ROI_width = width;
 	ROI_height = height;
 }
 
@@ -391,23 +391,26 @@ bool Libdc1394Grabber::initCamera( int _width, int _height, dc1394video_mode_t _
 
     // These methods would cleanup the mess left behind by other processes,
     // but as of (libdc1394 2.0.0 rc9) this is not supported for the Juju stack
-#ifdef TARGET_OSX	
+#ifdef TARGET_OSX
         dc1394_iso_release_bandwidth(camera, INT_MAX);
         for (int channel = 0; channel < 64; ++channel) {
             dc1394_iso_release_channel(camera, channel);
         }
 #endif
-	
+
 #ifdef TARGET_LINUX
 	// This is rude, but for now needed (Juju)...
 	dc1394_reset_bus(camera);
 #endif
-	
+
 	/* Select camera transfer mode */
     if ((camera->bmode_capable > 0) && (bSet1394bMode)) {
-        dc1394_video_set_operation_mode(camera, DC1394_OPERATION_MODE_1394B);
+        err = dc1394_video_set_operation_mode(camera, DC1394_OPERATION_MODE_1394B);
         speed = DC1394_ISO_SPEED_800;
-        ofLog(OF_LOG_NOTICE,"1394B detected! Trying ISO Speed 800.");
+        ofLog(OF_LOG_NOTICE,"1394B detected! Trying ISO Speed 800");
+        if(err!=DC1394_SUCCESS){
+            ofLog( OF_LOG_ERROR, "Failed to set ISO Speed 800");
+        }
     } else {
         speed = DC1394_ISO_SPEED_400;
     }
@@ -713,7 +716,7 @@ void Libdc1394Grabber::captureFrame()
 static void rgb2bgr(const unsigned char *src, unsigned char *dest, unsigned long long int NumPixels)
 {
 	register int i = NumPixels - 1;
-	register int j = NumPixels - 1;	
+	register int j = NumPixels - 1;
 	while (i > 0) {
 		dest[j--] = src[i--];
 		dest[j--] = src[i--];
@@ -774,7 +777,7 @@ void Libdc1394Grabber::processCameraImageData( unsigned char* _cameraImageData )
 		    lock();
 			dc1394_convert_to_MONO8(_cameraImageData, pixels, width, height, 0, sourceFormatLibDC, 16);
 			unlock();
-		}		
+		}
 		else
 		{
 		    ofLog(OF_LOG_ERROR, "Unsupported target format %s from DC1394_COLOR_CODING_MONO16 or DC1394_COLOR_CODING_RAW16 ",videoFormatToString( targetFormat ).c_str());
