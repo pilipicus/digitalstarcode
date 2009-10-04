@@ -13,18 +13,18 @@
 == Version 0.3 ==
 
 Basic framework improvements:
-* Loading/Saving from XML
-* SetVerbose(), setDeviceID and ListDevices() functions
-* Normalized GUI api
-* Fixed small GUI layout bug
+ * Loading/Saving from XML
+ * setVerbose(), setDeviceID and listDevices() functions
+ * Normalized GUI api
+ * Fixed small GUI layout bug
 
 Libdc1394 grabber improvements:
-* Thread locking
-* Format 7 support including region of interest (ROI)
-* setDiscardFrames() for better interactivity response
-* 1394b support
-* Cleaned up initialization code
-* Initialise cameras by GUID and unit number (latter is useful for specifying stereo cams)
-* Mono16 greyscale support
+ * Thread locking
+ * Format 7 support including region of interest (ROI)
+ * setDiscardFrames() for better interactivity response
+ * 1394b support
+ * Cleaned up initialization code
+ * Initialise cameras by GUID and unit number (latter is useful for specifying stereo  cams)
+ * Mono16 greyscale support
 * Bandwidth and ISO cleanup on start-up
 * Almost all output messages are using the ofLog system
