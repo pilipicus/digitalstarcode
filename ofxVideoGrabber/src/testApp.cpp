@@ -9,6 +9,8 @@ void testApp::setup(){
 	appWidth        = ofGetWidth();
 	appHeight       = ofGetHeight();
 	mytimeThen		= 0.0f;
+	myframeRate     = 0.0f;
+	myframes        = 0.0f;
 
 	ofSetVerticalSync(true);
 	ofSetLogLevel(OF_LOG_VERBOSE);
@@ -28,7 +30,7 @@ void testApp::setup(){
 	settings->setXMLFilename("mySettingsFile.xml");
 
 	vidGrabber.setVerbose(true);
-    bool result = vidGrabber.initGrabber( camWidth, camHeight, VID_FORMAT_YUV411, VID_FORMAT_RGB, 30, true, sdk, settings );
+    bool result = vidGrabber.initGrabber( camWidth, camHeight, VID_FORMAT_YUV422, VID_FORMAT_RGB, 30, true, sdk, settings );
 
     //bool result = vidGrabber.initGrabber( camWidth, camHeight, VID_FORMAT_YUV422, VID_FORMAT_RGB, 30 );
 	// or like this:
