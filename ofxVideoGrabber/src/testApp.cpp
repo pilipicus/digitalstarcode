@@ -30,7 +30,7 @@ void testApp::setup(){
 	settings->setXMLFilename("mySettingsFile.xml");
 
 	vidGrabber.setVerbose(true);
-    bool result = vidGrabber.initGrabber( camWidth, camHeight, VID_FORMAT_YUV422, VID_FORMAT_RGB, 30, true, sdk, settings );
+    bool result = vidGrabber.initGrabber( camWidth, camHeight, VID_FORMAT_Y16, VID_FORMAT_RGB, 30, true, sdk, settings );
 
     //bool result = vidGrabber.initGrabber( camWidth, camHeight, VID_FORMAT_YUV422, VID_FORMAT_RGB, 30 );
 	// or like this:

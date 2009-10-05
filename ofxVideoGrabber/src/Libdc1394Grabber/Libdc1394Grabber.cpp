@@ -3,9 +3,7 @@
 #include "Libdc1394GrabberFramerateHelper.h"
 #include "Libdc1394GrabberVideoFormatHelper.h"
 
-//#include <sstream>
 
-//int Libdc1394Grabber::g_cameraIndex = -1;
 dc1394_t* Libdc1394Grabber::dc1394 = NULL;
 
 Libdc1394Grabber::Libdc1394Grabber()
@@ -49,11 +47,11 @@ Libdc1394Grabber::~Libdc1394Grabber()
 
 	if (camera != NULL )
 	{
-		fprintf(stderr,"stop transmission\n");
+		ofLog(OF_LOG_NOTICE ,"Stopping ISO transmission.");
 		// Stop data transmission
 		if (dc1394_video_set_transmission(camera,DC1394_OFF)!=DC1394_SUCCESS)
 		{
-			printf("couldn't stop the camera?\n");
+			ofLog(OF_LOG_ERROR, "Could not stop ISO transmission!");
 		}
 		// Close camera
 		cleanupCamera();
@@ -446,8 +444,14 @@ bool Libdc1394Grabber::initCamera( int _width, int _height, dc1394video_mode_t _
         }
     }
 
-	if(!bUseFormat7)
-		video_mode = _videoMode;
+	if(!bUseFormat7) {
+	    if(foundVideoMode) {
+            video_mode = _videoMode;
+		} else {
+		    ofLog(OF_LOG_WARNING, "Could not find desired video mode, using default");
+            video_mode = video_modes.modes[0];
+		}
+	}
 
 
 	/*-----------------------------------------------------------------------
