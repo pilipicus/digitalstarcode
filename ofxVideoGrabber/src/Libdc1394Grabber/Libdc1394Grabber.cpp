@@ -44,7 +44,7 @@ Libdc1394Grabber::Libdc1394Grabber()
 
 Libdc1394Grabber::~Libdc1394Grabber()
 {
-
+cout << "libdcgrabber destructor" << endl;
 	if (camera != NULL )
 	{
 		ofLog(OF_LOG_NOTICE ,"Stopping ISO transmission.");

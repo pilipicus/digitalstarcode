@@ -1,5 +1,9 @@
 #include "testApp.h"
 #include "ofxIIDCSettings.h"
+void testApp::exit()
+{
+
+}
 
 //--------------------------------------------------------------
 void testApp::setup(){
