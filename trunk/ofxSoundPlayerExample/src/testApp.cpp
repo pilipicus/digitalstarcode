@@ -6,7 +6,9 @@ void testApp::exit()
     #ifdef USE_OPENAL
     // need these here for the moment, still experimental
    sound.removeEffect(fx1.getEffectID());
+   #ifdef TARGET_LINUX
    sound.removeEffect(fx2.getEffectID());
+   #endif
    #endif
 }
 
@@ -37,19 +39,19 @@ void testApp::setup(){
     gunshot.setMultiPlay(true);
     gunshot.setVolume(0.5);
 
-    #ifdef USE_OPENAL
-    #ifndef TARGET_OSX //Echo doesn't work on OSX, because it doesn't use OpenAL Soft.
+#ifdef USE_OPENAL
     /* warning, experimental! only works on mono samples (sounds), no streams */
-
     fx1.addEffect(AL_EFFECT_REVERB);
-    fx1.setEffectParameter(AL_REVERB_DECAY_TIME, 15.0f);
+    fx1.setEffectParameter(AL_REVERB_DECAY_TIME, 10.0f);
     fx1.setEffectGain(1.0f);
+    sound.assignEffect(fx1.getEffect(),fx1.getEffectID());
+#ifdef TARGET_LINUX
+    //Echo only works on Linux due to OpenAL Soft.
     fx2.addEffect(AL_EFFECT_ECHO);
     fx2.setEffectGain(1.0f);
-    sound.assignEffect(fx1.getEffect(),fx1.getEffectID());
     sound.assignEffect(fx2.getEffect(),fx2.getEffectID());
-    #endif
-    #endif
+#endif
+#endif
 
     sound.play();
 }

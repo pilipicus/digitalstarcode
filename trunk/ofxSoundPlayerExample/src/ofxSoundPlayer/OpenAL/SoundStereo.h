@@ -366,8 +366,8 @@ private :
     ////////////////////////////////////////////////////////////
     Sound*  leftChannel;
     Sound*  rightChannel;
-    int     m_pan;
-    int     m_volume;
+    float     m_pan;
+    float     m_volume;
 
 };
 

@@ -94,7 +94,7 @@ bool ofxSoundPlayerOpenAL::loadSound(string fileName, bool bIsStream)
 
         internalFreq = stream->GetSampleRate();
         duration = stream->GetDuration();
-        length = internalFreq * duration;
+        length = static_cast<unsigned int> (internalFreq * duration);
         channelCount = stream->GetChannelsCount();
 
         isStreaming = true;

@@ -36,7 +36,7 @@ namespace ofxOpenALPlayer
 ////////////////////////////////////////////////////////////
 /// Default constructor
 ////////////////////////////////////////////////////////////
-SoundStereo::SoundStereo() : m_pan(0), m_volume(100.0f)
+SoundStereo::SoundStereo() : m_pan(0), m_volume(100)
 {
 
 }
