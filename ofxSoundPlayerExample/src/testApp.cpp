@@ -16,6 +16,7 @@ void testApp::exit()
 void testApp::setup(){
 
     ofSetFrameRate(30);
+    ofHideCursor();
 
     //load mono sound
     sound.loadSound("fx1.wav");
@@ -64,12 +65,26 @@ void testApp::update(){
 //--------------------------------------------------------------
 void testApp::draw(){
 
+    ofSetColor(133,133,133);
+    int width = ofGetWidth();
+    int height = ofGetHeight();
+    for(int i=0; i < width;i+=width/20)
+    {
+        ofLine(i,0,i,height);
+    }
+    for(int i=0; i < height;i+=height/20)
+    {
+        ofLine(0,i,width,i);
+    }
+
+    ofSetColor(0xe84573);
+    ofRect(0,0,width,80);
     ofSetColor(255,255,255);
     ofDrawBitmapString("PRESS KEY: [1] Synth sample loop   [2] Stereo drum loop    [3] Music stream ",20,20);
     ofDrawBitmapString("[spacebar] pause    [l] toggle looping    [s] stop all sounds ",20,40);
     ofDrawBitmapString("Click mouse or press [f] to trigger multi-play sound, move mouse to change pan/pitch ",20,60);
-    ofSetColor(0xe84573);
-    ofCircle(mouseX,mouseY,30);
+    ofSetColor(255,255,255);
+    ofCircle(mouseX,mouseY,10);
 }
 
 //--------------------------------------------------------------
