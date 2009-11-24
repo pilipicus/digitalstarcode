@@ -34,7 +34,7 @@
 #if defined(TARGET_OSX)
 #include <OpenAL/al.h>
 #include <OpenAL/alc.h>
-#include <OpenAL/alext.h>
+//#include <OpenAL/alext.h>
 #else
 #include <AL/al.h>
 #include <AL/alc.h>
