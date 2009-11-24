@@ -5,11 +5,11 @@ void testApp::exit()
 {
     #ifdef USE_OPENAL
     // need these here for the moment, still experimental
-#ifndef TARGET_OSX	
-   sound.removeEffect(fx1.getEffectID());
+#ifndef TARGET_OSX
+   gunshot.removeEffect(fx1.getEffectID());
 #endif
    #ifdef TARGET_LINUX
-   sound.removeEffect(fx2.getEffectID());
+   gunshot.removeEffect(fx2.getEffectID());
    #endif
    #endif
 }
@@ -19,7 +19,7 @@ void testApp::setup(){
 
     ofSetFrameRate(30);
     ofHideCursor();
-	
+
 #ifdef TARGET_OSX
 	ofSetDataPathRoot("../bin/data/");
 #endif
@@ -44,7 +44,7 @@ void testApp::setup(){
 	//load one-shot
 	gunshot.loadSound("gunshot.wav");
 	gunshot.setVolume(0.7f);
-	
+
     // load mono sound, set multi-play (only works on mono sounds)
     multiplay.loadSound("drumloop_mono.wav");
     multiplay.setMultiPlay(true);
@@ -55,13 +55,13 @@ void testApp::setup(){
     fx1.addEffect(AL_EFFECT_REVERB);
     fx1.setEffectParameter(AL_REVERB_DECAY_TIME, 10.0f);
     fx1.setEffectGain(1.0f);
-    sound.assignEffect(fx1.getEffect(),fx1.getEffectID());
+    gunshot.assignEffect(fx1.getEffect(),fx1.getEffectID());
 #endif
 #ifdef TARGET_LINUX
     //Echo only works on Linux due to OpenAL Soft.
     fx2.addEffect(AL_EFFECT_ECHO);
     fx2.setEffectGain(1.0f);
-    sound.assignEffect(fx2.getEffect(),fx2.getEffectID());
+    gunshot.assignEffect(fx2.getEffect(),fx2.getEffectID());
 #endif
 #endif
 
@@ -137,8 +137,8 @@ void testApp::keyPressed(int key){
         drums.stop();
         music.stop();
         multiplay.setPan(ofRandomf());
-        multiplay.play();		
-    }	
+        multiplay.play();
+    }
     if(key == 'l') {
         loopToggle = !loopToggle;
         sound.setLoop(loopToggle);
