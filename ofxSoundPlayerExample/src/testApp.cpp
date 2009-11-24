@@ -5,7 +5,9 @@ void testApp::exit()
 {
     #ifdef USE_OPENAL
     // need these here for the moment, still experimental
+#ifndef TARGET_OSX	
    sound.removeEffect(fx1.getEffectID());
+#endif
    #ifdef TARGET_LINUX
    sound.removeEffect(fx2.getEffectID());
    #endif
@@ -17,6 +19,10 @@ void testApp::setup(){
 
     ofSetFrameRate(30);
     ofHideCursor();
+	
+#ifdef TARGET_OSX
+	ofSetDataPathRoot("../bin/data/");
+#endif
 
     //load mono sound
     sound.loadSound("fx1.wav");
@@ -35,17 +41,22 @@ void testApp::setup(){
     music.loadSound("bells.ogg",true);
     music.setLoop(true);
 
+	//load one-shot
+	gunshot.loadSound("gunshot.wav");
+	gunshot.setVolume(0.7f);
+	
     // load mono sound, set multi-play (only works on mono sounds)
-    gunshot.loadSound("drumloop_mono.wav");
-    gunshot.setMultiPlay(true);
-    gunshot.setVolume(1.0);
+    multiplay.loadSound("drumloop_mono.wav");
+    multiplay.setMultiPlay(true);
 
 #ifdef USE_OPENAL
     /* warning, experimental! only works on mono samples (sounds), no streams */
+#ifndef TARGET_OSX
     fx1.addEffect(AL_EFFECT_REVERB);
     fx1.setEffectParameter(AL_REVERB_DECAY_TIME, 10.0f);
     fx1.setEffectGain(1.0f);
     sound.assignEffect(fx1.getEffect(),fx1.getEffectID());
+#endif
 #ifdef TARGET_LINUX
     //Echo only works on Linux due to OpenAL Soft.
     fx2.addEffect(AL_EFFECT_ECHO);
@@ -80,11 +91,15 @@ void testApp::draw(){
     ofSetColor(0xe84573);
     ofRect(0,0,width,80);
     ofSetColor(255,255,255);
-    ofDrawBitmapString("PRESS KEY: [1] Synth sample loop   [2] Stereo drum loop    [3] Music stream ",20,20);
+    ofDrawBitmapString("PRESS KEY: [1] Mono loop   [2] Stereo loop   [3] Music stream   [4] Multi-play sample ",20,20);
     ofDrawBitmapString("[spacebar] pause    [l] toggle looping    [s] stop all sounds ",20,40);
-    ofDrawBitmapString("Click mouse or press [f] to trigger multi-play sound, move mouse to change pan/pitch ",20,60);
+    ofDrawBitmapString("Click mouse to trigger one-shot mono sample, move mouse to change pan/pitch ",20,60);
     ofSetColor(255,255,255);
     ofCircle(mouseX,mouseY,10);
+	ofNoFill();
+	ofSetColor(0, 0, 0);
+	ofCircle(mouseX,mouseY,10);
+	ofFill();
 }
 
 //--------------------------------------------------------------
@@ -116,15 +131,19 @@ void testApp::keyPressed(int key){
         drums.stop();
         music.play();
     }
+    if(key == '4')
+    {
+        sound.stop();
+        drums.stop();
+        music.stop();
+        multiplay.setPan(ofRandomf());
+        multiplay.play();		
+    }	
     if(key == 'l') {
         loopToggle = !loopToggle;
         sound.setLoop(loopToggle);
         drums.setLoop(loopToggle);
         music.setLoop(loopToggle);
-    }
-    if(key == 'f') {
-        gunshot.setPan(ofRandomf());
-        gunshot.play();
     }
     if(key == 's') {
         ofxSoundStopAll();

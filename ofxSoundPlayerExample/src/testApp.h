@@ -30,9 +30,12 @@ class testApp : public ofBaseApp{
         ofxSoundPlayer gunshot;
         ofxSoundPlayer drums;
         ofxSoundPlayer music;
+	    ofxSoundPlayer multiplay;
         #ifdef USE_OPENAL
+#ifndef TARGET_OSX
         Effect fx1;
         Effect fx2;
+#endif
         #endif
 
 };
