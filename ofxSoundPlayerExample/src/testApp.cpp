@@ -34,10 +34,10 @@ void testApp::setup(){
     music.loadSound("bells.ogg",true);
     music.setLoop(true);
 
-    // load mono sound, set multi-play
-    gunshot.loadSound("gunshot.wav");
+    // load mono sound, set multi-play (only works on mono sounds)
+    gunshot.loadSound("drumloop_mono.wav");
     gunshot.setMultiPlay(true);
-    gunshot.setVolume(0.5);
+    gunshot.setVolume(1.0);
 
 #ifdef USE_OPENAL
     /* warning, experimental! only works on mono samples (sounds), no streams */
@@ -67,7 +67,7 @@ void testApp::draw(){
     ofSetColor(255,255,255);
     ofDrawBitmapString("PRESS KEY: [1] Synth sample loop   [2] Stereo drum loop    [3] Music stream ",20,20);
     ofDrawBitmapString("[spacebar] pause    [l] toggle looping    [s] stop all sounds ",20,40);
-    ofDrawBitmapString("Click mouse to trigger multi-play gunshots, move mouse to change pan/pitch ",20,60);
+    ofDrawBitmapString("Click mouse or press [f] to trigger multi-play sound, move mouse to change pan/pitch ",20,60);
     ofSetColor(0xe84573);
     ofCircle(mouseX,mouseY,30);
 }
@@ -107,6 +107,10 @@ void testApp::keyPressed(int key){
         drums.setLoop(loopToggle);
         music.setLoop(loopToggle);
     }
+    if(key == 'f') {
+        gunshot.setPan(ofRandomf());
+        gunshot.play();
+    }
     if(key == 's') {
         ofxSoundStopAll();
     }
@@ -132,6 +136,7 @@ void testApp::mouseDragged(int x, int y, int button){
 
 //--------------------------------------------------------------
 void testApp::mousePressed(int x, int y, int button){
+    gunshot.setPan(ofRandomf());
     gunshot.play();
 }
 
