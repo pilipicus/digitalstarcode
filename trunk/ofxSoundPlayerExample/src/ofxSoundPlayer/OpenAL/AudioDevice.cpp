@@ -41,6 +41,38 @@ namespace ofxOpenALPlayer
 AudioDevice* AudioDevice::ourInstance;
 
 
+// note: MAX_SOURCES is how many source you want
+// to preload.  should keep it below 32
+#define MAX_SOURCES 300;
+
+void preloadSources()
+{
+        // lazy init of my data structure
+
+	// we want to allocate all the sources we will need up front
+	int sourceCount = MAX_SOURCES;
+	int sourceIndex;
+	ALuint sourceID;
+	// build a bunch of sources and load them into our array.
+	for (sourceIndex = 0; sourceIndex < sourceCount; sourceIndex++)
+	{
+	    cout << "sources = " << sourceIndex << endl;
+		alGenSources(1, &sourceID);
+        int err=0;
+        if((err=alGetError()) != AL_FALSE) {
+            cout <<"Couldn't generate source name, maxmimum numbers of sources: " << sourceIndex << endl;
+            break;
+        }
+
+	}
+
+//	for(int i = 0; i <= sourceIndex; i++)
+//	{
+//	    alDeleteSources();
+//	}
+}
+
+
 ////////////////////////////////////////////////////////////
 /// Default constructor
 ////////////////////////////////////////////////////////////
@@ -65,6 +97,9 @@ myRefCount(0)
             // Initialize the listener, located at the origin and looking along the Z axis
             Listener::SetPosition(0,0,listenerDepth);
             Listener::SetTarget(0,0,-listenerDepth);
+
+            //preloadSources();
+            //exit(1);
         }
         else
         {

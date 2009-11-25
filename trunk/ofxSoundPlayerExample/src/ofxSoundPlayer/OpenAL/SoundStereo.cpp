@@ -47,11 +47,6 @@ SoundStereo::SoundStereo() : m_pan(0), m_volume(100)
 ////////////////////////////////////////////////////////////
 SoundStereo::SoundStereo(const SoundBuffer& Buffer, bool Loop, float Pitch, float Volume, const ofxVec3f& LeftPosition, const ofxVec3f& RightPosition)
 {
-    // extract stereo channels
-//            internalFreq = stream->GetSampleRate();
-//        duration = stream->GetDuration();
-//        length = internalFreq * duration;
-//        channelCount = stream->GetChannelsCount();
 
     const Int16* buf = Buffer.GetSamples();
     int newLength = Buffer.GetSamplesCount()/2;
@@ -70,10 +65,10 @@ SoundStereo::SoundStereo(const SoundBuffer& Buffer, bool Loop, float Pitch, floa
     rightBuffer->LoadFromSamples(buf2,newLength,Buffer.GetChannelsCount()/2,Buffer.GetSampleRate());
 
     // Create a stereo sound instance
-    leftChannel = new Sound();
-    rightChannel = new Sound();
-    leftChannel->SetBuffer(*leftBuffer);
-    rightChannel->SetBuffer(*rightBuffer);
+    //leftChannel = new Sound();
+    //rightChannel = new Sound();
+    leftChannel.SetBuffer(*leftBuffer);
+    rightChannel.SetBuffer(*rightBuffer);
 
     SetLoop(Loop);
     SetPitch(Pitch);
@@ -91,10 +86,10 @@ SoundStereo::SoundStereo(const SoundBuffer& Buffer, bool Loop, float Pitch, floa
 ////////////////////////////////////////////////////////////
 SoundStereo::SoundStereo(const SoundStereo& Copy)
 {
-    leftChannel = new Sound;
-    leftChannel->SetBuffer(*Copy.GetLeftBuffer());
-    rightChannel = new Sound;
-    rightChannel->SetBuffer(*Copy.GetRightBuffer());
+    //leftChannel = new Sound;
+    leftChannel.SetBuffer(*Copy.GetLeftBuffer());
+    //rightChannel = new Sound;
+    rightChannel.SetBuffer(*Copy.GetRightBuffer());
     SetPan(Copy.m_pan);
     SetVolume(Copy.m_volume);
     SetLoop(Copy.GetLoop());
@@ -110,12 +105,12 @@ SoundStereo::SoundStereo(const SoundStereo& Copy)
 ////////////////////////////////////////////////////////////
 SoundStereo::~SoundStereo()
 {
-    if(leftChannel) {
-        delete leftChannel;
-    }
-    if(rightChannel) {
-        delete rightChannel;
-    }
+//    if(leftChannel) {
+//        delete leftChannel;
+//    }
+//    if(rightChannel) {
+//        delete rightChannel;
+//    }
 }
 
 
@@ -124,8 +119,8 @@ SoundStereo::~SoundStereo()
 ////////////////////////////////////////////////////////////
 void SoundStereo::Play()
 {
-    leftChannel->Play();
-    rightChannel->Play();
+    leftChannel.Play();
+    rightChannel.Play();
 }
 
 
@@ -134,8 +129,8 @@ void SoundStereo::Play()
 ////////////////////////////////////////////////////////////
 void SoundStereo::Pause()
 {
-    leftChannel->Pause();
-    rightChannel->Pause();
+    leftChannel.Pause();
+    rightChannel.Pause();
 }
 
 
@@ -144,8 +139,8 @@ void SoundStereo::Pause()
 ////////////////////////////////////////////////////////////
 void SoundStereo::Stop()
 {
-    leftChannel->Stop();
-    rightChannel->Stop();
+    leftChannel.Stop();
+    rightChannel.Stop();
 }
 
 
@@ -172,13 +167,13 @@ void SoundStereo::SetBuffer(const SoundBuffer& Buffer)
     rightBuffer->LoadFromSamples(buf2,newLength,Buffer.GetChannelsCount()/2,Buffer.GetSampleRate());
 
     // Create a stereo sound instance
-    leftChannel = new Sound();
-    rightChannel = new Sound();
-    leftChannel->SetBuffer(*leftBuffer);
-    rightChannel->SetBuffer(*rightBuffer);
+//    leftChannel = new Sound();
+//    rightChannel = new Sound();
+    leftChannel.SetBuffer(*leftBuffer);
+    rightChannel.SetBuffer(*rightBuffer);
 
-    leftChannel->SetPosition(-1,0,0);
-    rightChannel->SetPosition(1,0,0);
+    leftChannel.SetPosition(-1,0,0);
+    rightChannel.SetPosition(1,0,0);
 
     delete [] buf1;
     delete [] buf2;
@@ -191,8 +186,8 @@ void SoundStereo::SetBuffer(const SoundBuffer& Buffer)
 ////////////////////////////////////////////////////////////
 void SoundStereo::SetLoop(bool Loop)
 {
-    leftChannel->SetLoop(Loop);
-    rightChannel->SetLoop(Loop);
+    leftChannel.SetLoop(Loop);
+    rightChannel.SetLoop(Loop);
 }
 
 
@@ -201,8 +196,8 @@ void SoundStereo::SetLoop(bool Loop)
 ////////////////////////////////////////////////////////////
 void SoundStereo::SetPitch(float Pitch)
 {
-    leftChannel->SetPitch(Pitch);
-    rightChannel->SetPitch(Pitch);
+    leftChannel.SetPitch(Pitch);
+    rightChannel.SetPitch(Pitch);
 }
 
 
@@ -212,19 +207,20 @@ void SoundStereo::SetPitch(float Pitch)
 void SoundStereo::SetVolume(float Volume)
 {
     m_volume = Volume;
-    leftChannel->SetVolume((1.0f - m_pan)*Volume);
-    rightChannel->SetVolume(m_pan*Volume);
+    leftChannel.SetVolume((1.0f - m_pan)*Volume);
+    rightChannel.SetVolume(m_pan*Volume);
 }
 
 ////////////////////////////////////////////////////////////
-/// Set the sound 2D panning
+/// Set the 2D sound panning
+/// Takes values from -1 to +1
 ////////////////////////////////////////////////////////////
-void SoundStereo::SetPan(float pan) // -1 to +1
+void SoundStereo::SetPan(float pan)
 {
     m_pan = pan;
     float p = (pan + 1.0f)/2.0f;
-    leftChannel->SetVolume((1.0f - p)*2*m_volume);
-    rightChannel->SetVolume(p*2*m_volume);
+    leftChannel.SetVolume((1.0f - p)*2*m_volume);
+    rightChannel.SetVolume(p*2*m_volume);
 }
 
 ////////////////////////////////////////////////////////////
@@ -233,7 +229,7 @@ void SoundStereo::SetPan(float pan) // -1 to +1
 ////////////////////////////////////////////////////////////
 void SoundStereo::SetLeftPosition(float x, float y, float z)
 {
-    leftChannel->SetPosition(ofxVec3f(x,y,z));
+    leftChannel.SetPosition(ofxVec3f(x,y,z));
 }
 
 ////////////////////////////////////////////////////////////
@@ -242,7 +238,7 @@ void SoundStereo::SetLeftPosition(float x, float y, float z)
 ////////////////////////////////////////////////////////////
 void SoundStereo::SetRightPosition(float x, float y, float z)
 {
-    rightChannel->SetPosition(ofxVec3f(x,y,z));
+    rightChannel.SetPosition(ofxVec3f(x,y,z));
 }
 
 
@@ -252,7 +248,7 @@ void SoundStereo::SetRightPosition(float x, float y, float z)
 ////////////////////////////////////////////////////////////
 void SoundStereo::SetLeftPosition(const ofxVec3f& Position)
 {
-    leftChannel->SetPosition(Position);
+    leftChannel.SetPosition(Position);
 }
 
 ////////////////////////////////////////////////////////////
@@ -261,7 +257,7 @@ void SoundStereo::SetLeftPosition(const ofxVec3f& Position)
 ////////////////////////////////////////////////////////////
 void SoundStereo::SetRightPosition(const ofxVec3f& Position)
 {
-    rightChannel->SetPosition(Position);
+    rightChannel.SetPosition(Position);
 }
 
 
@@ -272,8 +268,8 @@ void SoundStereo::SetRightPosition(const ofxVec3f& Position)
 ////////////////////////////////////////////////////////////
 void SoundStereo::SetRelativeToListener(bool Relative)
 {
-    leftChannel->SetRelativeToListener(Relative);
-    rightChannel->SetRelativeToListener(Relative);
+    leftChannel.SetRelativeToListener(Relative);
+    rightChannel.SetRelativeToListener(Relative);
 }
 
 
@@ -284,8 +280,8 @@ void SoundStereo::SetRelativeToListener(bool Relative)
 ////////////////////////////////////////////////////////////
 void SoundStereo::SetMinDistance(float MinDistance)
 {
-    leftChannel->SetMinDistance(MinDistance);
-    rightChannel->SetMinDistance(MinDistance);
+    leftChannel.SetMinDistance(MinDistance);
+    rightChannel.SetMinDistance(MinDistance);
 }
 
 
@@ -296,8 +292,8 @@ void SoundStereo::SetMinDistance(float MinDistance)
 ////////////////////////////////////////////////////////////
 void SoundStereo::SetAttenuation(float Attenuation)
 {
-    leftChannel->SetAttenuation(Attenuation);
-    rightChannel->SetAttenuation(Attenuation);
+    leftChannel.SetAttenuation(Attenuation);
+    rightChannel.SetAttenuation(Attenuation);
 }
 
 
@@ -306,8 +302,8 @@ void SoundStereo::SetAttenuation(float Attenuation)
 ////////////////////////////////////////////////////////////
 void SoundStereo::SetPlayingOffset(float TimeOffset)
 {
-    leftChannel->SetPlayingOffset(TimeOffset);
-    rightChannel->SetPlayingOffset(TimeOffset);
+    leftChannel.SetPlayingOffset(TimeOffset);
+    rightChannel.SetPlayingOffset(TimeOffset);
 }
 
 
@@ -316,7 +312,7 @@ void SoundStereo::SetPlayingOffset(float TimeOffset)
 ////////////////////////////////////////////////////////////
 const SoundBuffer* SoundStereo::GetLeftBuffer() const
 {
-    return leftChannel->GetBuffer();
+    return leftChannel.GetBuffer();
 }
 
 ////////////////////////////////////////////////////////////
@@ -324,7 +320,7 @@ const SoundBuffer* SoundStereo::GetLeftBuffer() const
 ////////////////////////////////////////////////////////////
 const SoundBuffer* SoundStereo::GetRightBuffer() const
 {
-    return rightChannel->GetBuffer();
+    return rightChannel.GetBuffer();
 }
 
 ////////////////////////////////////////////////////////////
@@ -332,7 +328,7 @@ const SoundBuffer* SoundStereo::GetRightBuffer() const
 ////////////////////////////////////////////////////////////
 bool SoundStereo::GetLoop() const
 {
-    return leftChannel->GetLoop();
+    return leftChannel.GetLoop();
 }
 
 
@@ -341,7 +337,7 @@ bool SoundStereo::GetLoop() const
 ////////////////////////////////////////////////////////////
 float SoundStereo::GetPitch() const
 {
-    return leftChannel->GetPitch();
+    return leftChannel.GetPitch();
 }
 
 ////////////////////////////////////////////////////////////
@@ -365,7 +361,7 @@ float SoundStereo::GetPan() const
 ////////////////////////////////////////////////////////////
 ofxVec3f SoundStereo::GetLeftPosition() const
 {
-    return leftChannel->GetPosition();
+    return leftChannel.GetPosition();
 }
 
 ////////////////////////////////////////////////////////////
@@ -373,7 +369,7 @@ ofxVec3f SoundStereo::GetLeftPosition() const
 ////////////////////////////////////////////////////////////
 ofxVec3f SoundStereo::GetRightPosition() const
 {
-    return rightChannel->GetPosition();
+    return rightChannel.GetPosition();
 }
 
 ////////////////////////////////////////////////////////////
@@ -382,7 +378,7 @@ ofxVec3f SoundStereo::GetRightPosition() const
 ////////////////////////////////////////////////////////////
 bool SoundStereo::IsRelativeToListener() const
 {
-    return leftChannel->IsRelativeToListener();
+    return leftChannel.IsRelativeToListener();
 }
 
 
@@ -391,7 +387,7 @@ bool SoundStereo::IsRelativeToListener() const
 ////////////////////////////////////////////////////////////
 float SoundStereo::GetMinDistance() const
 {
-    return leftChannel->GetMinDistance();
+    return leftChannel.GetMinDistance();
 }
 
 
@@ -400,7 +396,7 @@ float SoundStereo::GetMinDistance() const
 ////////////////////////////////////////////////////////////
 float SoundStereo::GetAttenuation() const
 {
-    return leftChannel->GetAttenuation();
+    return leftChannel.GetAttenuation();
 }
 
 
@@ -409,7 +405,7 @@ float SoundStereo::GetAttenuation() const
 ////////////////////////////////////////////////////////////
 float SoundStereo::GetPlayingOffset() const
 {
-    return leftChannel->GetPlayingOffset();
+    return leftChannel.GetPlayingOffset();
 }
 
 
@@ -418,7 +414,7 @@ float SoundStereo::GetPlayingOffset() const
 ////////////////////////////////////////////////////////////
 Sound::SoundStatus SoundStereo::GetStatus() const
 {
-    return leftChannel->GetStatus();
+    return leftChannel.GetStatus();
 }
 
 ////////////////////////////////////////////////////////////
