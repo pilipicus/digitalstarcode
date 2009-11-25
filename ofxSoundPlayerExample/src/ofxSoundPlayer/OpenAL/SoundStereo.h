@@ -364,8 +364,8 @@ private :
     ////////////////////////////////////////////////////////////
     // Member data
     ////////////////////////////////////////////////////////////
-    Sound*  leftChannel;
-    Sound*  rightChannel;
+    Sound  leftChannel;
+    Sound  rightChannel;
     float     m_pan;
     float     m_volume;
 

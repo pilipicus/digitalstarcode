@@ -70,6 +70,7 @@
 			<Add directory="../../../addons/ofxThread/src" />
 			<Add directory="src/ofxSoundPlayer/OpenAL" />
 			<Add directory="src/ofxSoundPlayer/FMOD" />
+			<Add directory="libs/linux/include" />
 		</Compiler>
 		<Linker>
 			<Add library="raw1394" />
@@ -91,6 +92,7 @@
 			<Add directory="../../../libs/fmodex/lib" />
 			<Add directory="../../../libs/unicap/lib" />
 			<Add directory="../../../libs/poco/lib" />
+			<Add directory="libs/linux/lib" />
 		</Linker>
 		<ExtraCommands>
 			<Add after="#      copy libs and shell script to bin directory:" />
