@@ -1104,7 +1104,7 @@
 					"-lpthread",
 				);
 				OTHER_LDFLAGS = ./libs/osx/lib/libsndfile.a;
-				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
+				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
 				VALID_ARCHS = "i386 x86_64";
 			};
 			name = Debug;
@@ -1136,7 +1136,7 @@
 					"-lpthread",
 				);
 				OTHER_LDFLAGS = ./libs/osx/lib/libsndfile.a;
-				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
+				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
 				VALID_ARCHS = "i386 x86_64";
 			};
 			name = Release;
