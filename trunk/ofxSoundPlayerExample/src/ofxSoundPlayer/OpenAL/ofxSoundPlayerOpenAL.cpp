@@ -209,7 +209,7 @@ void ofxSoundPlayerOpenAL::unloadSound()
     if(multiSounds.size() > 0)
     {
         vector<Sound*>::iterator itr;
-        for(itr = multiSounds.begin(); itr < multiSounds.end();itr++)
+        for(itr = multiSounds.begin(); itr != multiSounds.end();itr++)
         {
             (*itr)->Stop();
             delete (*itr);
@@ -577,14 +577,14 @@ void ofxSoundPlayerOpenAL::play()
             if( status == Sound::Playing)
             {
                 vector<Sound*>::iterator itr;
-                for(itr = multiSounds.begin(); itr < multiSounds.end();itr++)
+                for(itr = multiSounds.begin(); itr != multiSounds.end();itr++)
                 {
                     status = (*itr)->GetStatus();
                     if(status != Sound::Playing)
                     {
                         (*itr)->Play();
                         hasPlayed = true;
-                        itr = multiSounds.end();
+                        break;
                     }
                 }
                 if(!hasPlayed)
