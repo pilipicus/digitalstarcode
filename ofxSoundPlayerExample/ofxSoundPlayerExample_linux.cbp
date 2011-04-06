@@ -2,41 +2,47 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="ofxSoundPlayerExample" />
+		<Option title="ofxSoundPlayer" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
-		<Option virtualFolders="addons/;libs/;src/;libs/openframeworks/;libs/openframeworks/app/;libs/openframeworks/communication/;libs/openframeworks/graphics/;libs/openframeworks/sound/;libs/openframeworks/utils/;libs/openframeworks/video/;libs/openframeworks/events/;src/ofxSoundPlayer/;src/ofxSoundPlayer/stb_vorbis/;addons/ofxVectorMath/src/;addons/ofxThread/src/;src/ofxSoundPlayer/OpenAL/;src/ofxSoundPlayer/FMOD/;" />
+		<Option virtualFolders="addons/;src/;addons/ofxThread/src/;addons/ofxVectorMath/src/;src/ofxSoundPlayer/;src/ofxSoundPlayer/OpenAL/;src/ofxSoundPlayer/stb_vorbis/;src/ofxSoundPlayer/FMOD/;" />
 		<Build>
 			<Target title="Debug">
-				<Option output="bin/ofxSoundPlayerExample_debug" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/$(PROJECT_NAME)_debug" prefix_auto="1" extension_auto="1" />
 				<Option working_dir="bin" />
 				<Option object_output="obj/Debug/" />
+				<Option external_deps="../../../libs/openFrameworksCompiled/lib/linux/libopenFrameworksDebug.a;" />
 				<Option type="1" />
 				<Option compiler="gcc" />
+				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-MMD" />
 				</Compiler>
+				<Linker>
+					<Add option="-Wl,-rpath=./libs" />
+					<Add library="openFrameworksDebug" />
+				</Linker>
 			</Target>
 			<Target title="Release">
-				<Option output="bin/ofxSoundPlayerExample" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/$(PROJECT_NAME)" prefix_auto="1" extension_auto="1" />
 				<Option working_dir="bin" />
 				<Option object_output="obj/Release/" />
+				<Option external_deps="../../../libs/openFrameworksCompiled/lib/linux/libopenFrameworks.a;" />
 				<Option type="1" />
 				<Option compiler="gcc" />
+				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
+					<Add option="-march=native" />
 					<Add option="-O3" />
 					<Add option="-MMD" />
 				</Compiler>
 				<Linker>
+					<Add option="-Wl,-rpath=./libs" />
 					<Add option="-s" />
+					<Add library="openFrameworks" />
 				</Linker>
 			</Target>
-			<Environment>
-				<Variable name="target" value="ofxSoundPlayerExample" />
-				<Variable name="nautilusOnBuild" value="false" />
-				<Variable name="runOnBuild" value="false" />
-			</Environment>
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
@@ -51,54 +57,50 @@
 			<Add directory="../../../libs/openFrameworks/utils" />
 			<Add directory="../../../libs/openFrameworks/sound" />
 			<Add directory="../../../libs/rtAudio" />
-			<Add directory="../../../libs/fmodex/inc" />
+			<Add directory="../../../libs/fmodex/include" />
 			<Add directory="../../../libs/glee/include" />
-			<Add directory="../../../libs/glee/" />
-			<Add directory="../../../libs/freeimage/Source" />
-			<Add directory="../../../libs/FreeImage" />
-			<Add directory="../../../libs/alsa/include" />
-			<Add directory="../../../libs/alsa/include/alsa" />
+			<Add directory="../../../libs/FreeImage/include" />
 			<Add directory="../../../libs/freetype/include" />
 			<Add directory="../../../libs/freetype/include/freetype2" />
-			<Add directory="../../../libs/unicap/include" />
 			<Add directory="../../../libs/gstappsink/include" />
 			<Add directory="../../../addons" />
 			<Add directory="../../../libs/poco/include" />
-			<Add directory="src/ofxSoundPlayer" />
-			<Add directory="src/ofxSoundPlayer/stb_vorbis" />
 			<Add directory="../../../addons/ofxVectorMath/src" />
 			<Add directory="../../../addons/ofxThread/src" />
+			<Add directory="src/ofxSoundPlayer" />
 			<Add directory="src/ofxSoundPlayer/OpenAL" />
 			<Add directory="src/ofxSoundPlayer/FMOD" />
-			<Add directory="libs/linux/include" />
 		</Compiler>
 		<Linker>
-			<Add library="raw1394" />
+			<Add library="openFrameworks" />
+			<Add library="fmodex" />
 			<Add library="glut" />
 			<Add library="GL" />
 			<Add library="GLU" />
 			<Add library="Xxf86vm" />
 			<Add library="asound" />
 			<Add library="PocoFoundation" />
-			<Add library="../../../libs/freetype/lib/libfreetype.a" />
-			<Add library="../../../libs/FreeImage/libfreeimage.a" />
-			<Add library="../../../libs/rtAudio/libRtAudio.a" />
-			<Add library="../../../libs/glee/libGLee.a" />
-			<Add library="unicap" />
-			<Add library="../../../libs/gstappsink/lib/liboFappsink.a" />
+			<Add library="freetype" />
+			<Add library="freeimage" />
+			<Add library="RtAudio" />
+			<Add library="GLee" />
+			<Add library="oFappsink" />
 			<Add library="openal" />
 			<Add library="sndfile" />
-			<Add library="fmodex" />
-			<Add directory="../../../libs/fmodex/lib" />
-			<Add directory="../../../libs/unicap/lib" />
-			<Add directory="../../../libs/poco/lib" />
-			<Add directory="libs/linux/lib" />
+			<Add directory="../../../libs/openFrameworksCompiled/lib/linux" />
+			<Add directory="../../../libs/freetype/lib/linux" />
+			<Add directory="../../../libs/FreeImage/lib/linux" />
+			<Add directory="../../../libs/rtAudio/lib/linux" />
+			<Add directory="../../../libs/glee/lib/linux" />
+			<Add directory="../../../libs/gstappsink/lib/linux" />
+			<Add directory="../../../libs/fmodex/lib/linux" />
+			<Add directory="../../../libs/poco/lib/linux" />
 		</Linker>
 		<ExtraCommands>
+			<Add after="#" />
 			<Add after="#      copy libs and shell script to bin directory:" />
-			<Add after="cp -r ../../../export/libs $(PROJECT_DIR)bin/" />
-			<Add after="cp ../../../export/clickToLaunchApp.sh $(PROJECT_DIR)bin/clickToLaunchApp_$(TARGET_NAME).sh" />
-			<Add after="sed -i s/applicationName/$(TARGET_OUTPUT_BASENAME)/g  $(PROJECT_DIR)bin/clickToLaunchApp_$(TARGET_NAME).sh" />
+			<Add after="#" />
+			<Add after="cp -r ../../../export/linux/libs $(PROJECT_DIR)bin/" />
 			<Mode after="always" />
 		</ExtraCommands>
 		<Unit filename="../../../addons/ofxThread/src/ofxThread.cpp">
@@ -119,43 +121,16 @@
 		<Unit filename="../../../addons/ofxVectorMath/src/ofxMatrix4x4.h">
 			<Option virtualFolder="addons/ofxVectorMath/src" />
 		</Unit>
-		<Unit filename="../../../addons/ofxVectorMath/src/ofxPoint2f.cpp">
+		<Unit filename="../../../addons/ofxVectorMath/src/ofxQuaternion.cpp">
 			<Option virtualFolder="addons/ofxVectorMath/src" />
 		</Unit>
-		<Unit filename="../../../addons/ofxVectorMath/src/ofxPoint2f.h">
-			<Option virtualFolder="addons/ofxVectorMath/src" />
-		</Unit>
-		<Unit filename="../../../addons/ofxVectorMath/src/ofxPoint3f.cpp">
-			<Option virtualFolder="addons/ofxVectorMath/src" />
-		</Unit>
-		<Unit filename="../../../addons/ofxVectorMath/src/ofxPoint3f.h">
-			<Option virtualFolder="addons/ofxVectorMath/src" />
-		</Unit>
-		<Unit filename="../../../addons/ofxVectorMath/src/ofxPoint4f.cpp">
-			<Option virtualFolder="addons/ofxVectorMath/src" />
-		</Unit>
-		<Unit filename="../../../addons/ofxVectorMath/src/ofxPoint4f.h">
-			<Option virtualFolder="addons/ofxVectorMath/src" />
-		</Unit>
-		<Unit filename="../../../addons/ofxVectorMath/src/ofxQuat.cpp">
-			<Option virtualFolder="addons/ofxVectorMath/src" />
-		</Unit>
-		<Unit filename="../../../addons/ofxVectorMath/src/ofxQuat.h">
-			<Option virtualFolder="addons/ofxVectorMath/src" />
-		</Unit>
-		<Unit filename="../../../addons/ofxVectorMath/src/ofxVec2f.cpp">
+		<Unit filename="../../../addons/ofxVectorMath/src/ofxQuaternion.h">
 			<Option virtualFolder="addons/ofxVectorMath/src" />
 		</Unit>
 		<Unit filename="../../../addons/ofxVectorMath/src/ofxVec2f.h">
 			<Option virtualFolder="addons/ofxVectorMath/src" />
 		</Unit>
-		<Unit filename="../../../addons/ofxVectorMath/src/ofxVec3f.cpp">
-			<Option virtualFolder="addons/ofxVectorMath/src" />
-		</Unit>
 		<Unit filename="../../../addons/ofxVectorMath/src/ofxVec3f.h">
-			<Option virtualFolder="addons/ofxVectorMath/src" />
-		</Unit>
-		<Unit filename="../../../addons/ofxVectorMath/src/ofxVec4f.cpp">
 			<Option virtualFolder="addons/ofxVectorMath/src" />
 		</Unit>
 		<Unit filename="../../../addons/ofxVectorMath/src/ofxVec4f.h">
@@ -168,10 +143,10 @@
 			<Option virtualFolder="src/" />
 		</Unit>
 		<Unit filename="src/ofxSoundPlayer/FMOD/ofxSoundPlayerFMOD.cpp">
-			<Option virtualFolder="src/ofxSoundPlayer/" />
+			<Option virtualFolder="src/ofxSoundPlayer/FMOD/" />
 		</Unit>
 		<Unit filename="src/ofxSoundPlayer/FMOD/ofxSoundPlayerFMOD.h">
-			<Option virtualFolder="src/ofxSoundPlayer/" />
+			<Option virtualFolder="src/ofxSoundPlayer/FMOD/" />
 		</Unit>
 		<Unit filename="src/ofxSoundPlayer/OpenAL/AudioDevice.cpp">
 			<Option virtualFolder="src/ofxSoundPlayer/OpenAL/" />
@@ -255,10 +230,10 @@
 			<Option virtualFolder="src/ofxSoundPlayer/OpenAL/" />
 		</Unit>
 		<Unit filename="src/ofxSoundPlayer/OpenAL/ofxSoundPlayerOpenAL.cpp">
-			<Option virtualFolder="src/ofxSoundPlayer/" />
+			<Option virtualFolder="src/ofxSoundPlayer/OpenAL/" />
 		</Unit>
 		<Unit filename="src/ofxSoundPlayer/OpenAL/ofxSoundPlayerOpenAL.h">
-			<Option virtualFolder="src/ofxSoundPlayer/" />
+			<Option virtualFolder="src/ofxSoundPlayer/OpenAL/" />
 		</Unit>
 		<Unit filename="src/ofxSoundPlayer/ofxSoundPlayer.cpp">
 			<Option virtualFolder="src/ofxSoundPlayer/" />
@@ -282,138 +257,12 @@
 		<Unit filename="src/testApp.h">
 			<Option virtualFolder="src/" />
 		</Unit>
-		<Unit filename="../../../libs/openFrameworks/app/ofAppBaseWindow.h">
-			<Option virtualFolder="libs/openframeworks/app/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/app/ofAppGlutWindow.cpp">
-			<Option virtualFolder="libs/openframeworks/app/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/app/ofAppGlutWindow.h">
-			<Option virtualFolder="libs/openframeworks/app/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/app/ofAppRunner.cpp">
-			<Option virtualFolder="libs/openframeworks/app/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/app/ofAppRunner.h">
-			<Option virtualFolder="libs/openframeworks/app/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/app/ofBaseApp.h">
-			<Option virtualFolder="libs/openframeworks/app/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/communication/ofArduino.cpp">
-			<Option virtualFolder="libs/openframeworks/communication/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/communication/ofArduino.h">
-			<Option virtualFolder="libs/openframeworks/communication/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/communication/ofSerial.cpp">
-			<Option virtualFolder="libs/openframeworks/communication/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/communication/ofSerial.h">
-			<Option virtualFolder="libs/openframeworks/communication/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/communication/ofStandardFirmata.cpp">
-			<Option virtualFolder="libs/openframeworks/communication/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/communication/ofStandardFirmata.h">
-			<Option virtualFolder="libs/openframeworks/communication/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/events/ofEventUtils.h">
-			<Option virtualFolder="libs/openframeworks/events/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/events/ofEvents.h">
-			<Option virtualFolder="libs/openframeworks/events/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/graphics/ofBitmapFont.cpp">
-			<Option virtualFolder="libs/openframeworks/graphics/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/graphics/ofBitmapFont.h">
-			<Option virtualFolder="libs/openframeworks/graphics/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/graphics/ofGraphics.cpp">
-			<Option virtualFolder="libs/openframeworks/graphics/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/graphics/ofGraphics.h">
-			<Option virtualFolder="libs/openframeworks/graphics/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/graphics/ofImage.cpp">
-			<Option virtualFolder="libs/openframeworks/graphics/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/graphics/ofImage.h">
-			<Option virtualFolder="libs/openframeworks/graphics/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/graphics/ofTexture.cpp">
-			<Option virtualFolder="libs/openframeworks/graphics/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/graphics/ofTexture.h">
-			<Option virtualFolder="libs/openframeworks/graphics/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/graphics/ofTrueTypeFont.cpp">
-			<Option virtualFolder="libs/openframeworks/graphics/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/graphics/ofTrueTypeFont.h">
-			<Option virtualFolder="libs/openframeworks/graphics/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/ofMain.h">
-			<Option virtualFolder="libs/openframeworks/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/sound/ofSoundPlayer.cpp">
-			<Option virtualFolder="libs/openframeworks/sound/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/sound/ofSoundPlayer.h">
-			<Option virtualFolder="libs/openframeworks/sound/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/sound/ofSoundStream.cpp">
-			<Option virtualFolder="libs/openframeworks/sound/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/sound/ofSoundStream.h">
-			<Option virtualFolder="libs/openframeworks/sound/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/utils/ofConstants.h">
-			<Option virtualFolder="libs/openframeworks/utils/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/utils/ofMath.cpp">
-			<Option virtualFolder="libs/openframeworks/utils/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/utils/ofMath.h">
-			<Option virtualFolder="libs/openframeworks/utils/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/utils/ofTypes.h">
-			<Option virtualFolder="libs/openframeworks/utils/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/utils/ofUtils.cpp">
-			<Option virtualFolder="libs/openframeworks/utils/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/utils/ofUtils.h">
-			<Option virtualFolder="libs/openframeworks/utils/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/video/ofUCUtils.cpp">
-			<Option virtualFolder="libs/openframeworks/video/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/video/ofUCUtils.h">
-			<Option virtualFolder="libs/openframeworks/video/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/video/ofVideoGrabber.cpp">
-			<Option virtualFolder="libs/openframeworks/video/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/video/ofVideoGrabber.h">
-			<Option virtualFolder="libs/openframeworks/video/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/video/ofVideoPlayer.cpp">
-			<Option virtualFolder="libs/openframeworks/video/" />
-		</Unit>
-		<Unit filename="../../../libs/openFrameworks/video/ofVideoPlayer.h">
-			<Option virtualFolder="libs/openframeworks/video/" />
-		</Unit>
 		<Extensions>
 			<lib_finder>
 				<lib name="gstreamer-0.10" />
 				<lib name="gstreamer-video-0.10" />
 				<lib name="gstreamer-base-0.10" />
-				<lib name="libavcodec" />
-				<lib name="libavformat" />
-				<lib name="libavutil" />
-				<lib name="libswscale" />
+				<lib name="libudev" />
 			</lib_finder>
 			<code_completion />
 			<envvars />

@@ -78,7 +78,7 @@ Effect::~Effect()
 
     // Delete Auxiliary Effect Slot
     if(uiEffectSlot) {
-        cout << "delete Aux Effect" << endl;
+//        cout << "delete Aux Effect" << endl;
         ALCheck(p_alDeleteAuxiliaryEffectSlots(1, &uiEffectSlot));
     }
 

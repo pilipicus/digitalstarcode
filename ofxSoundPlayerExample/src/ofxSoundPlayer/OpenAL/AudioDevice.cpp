@@ -160,7 +160,7 @@ void AudioDevice::AddReference()
 
     // Increase the references count
     ourInstance->myRefCount++;
-    cout << "ref count = " << ourInstance->myRefCount << endl;
+    //cout << "ref count = " << ourInstance->myRefCount << endl;
 }
 
 
@@ -171,7 +171,7 @@ void AudioDevice::RemoveReference()
 {
     // Decrease the references count
     ourInstance->myRefCount--;
-    cout << "ref count = " << ourInstance->myRefCount << endl;
+//    cout << "ref count = " << ourInstance->myRefCount << endl;
 
     // Destroy the audio device if the references count reaches 0
     if (ourInstance->myRefCount == 0)
